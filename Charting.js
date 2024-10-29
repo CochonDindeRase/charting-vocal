@@ -28,6 +28,9 @@ renderSectionImages(".dents3", "./wwwroot/maxillairepalatin.json", "maxP");
 renderSectionImages(".dents4", "./wwwroot/mandibulepalatin.json", "mandP");
 
 
+app.use(express.static('public'));
+
+
   
   // Création tableau pour les dents maxillaires
       // données pour le tableau
