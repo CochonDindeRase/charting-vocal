@@ -2,82 +2,82 @@
     {
         "id": 1,
         "nom": "18",
-        "image": "dents/18V.PNG"
+        "image": "dents/18V.WebP.PNG"
     },
     {
         "id": 2,
         "nom": "17",
-        "image": "dents/17V.PNG"
+        "image": "dents/17V.WebP.PNG"
     },
     {
         "id": 3,
         "nom": "16",
-        "image": "dents/16V.PNG"
+        "image": "dents/16V.WebP.PNG"
     },
     {
         "id": 4,
         "nom": "15",
-        "image": "dents/15V.PNG"
+        "image": "dents/15V.WebP.PNG"
     },
     {
         "id": 5,
         "nom": "14",
-        "image": "dents/14V.PNG"
+        "image": "dents/14V.WebP.PNG"
     },
     {
         "id": 6,
         "nom": "13",
-        "image": "dents/13V.PNG"
+        "image": "dents/13V.WebP.PNG"
     },
     {
         "id": 7,
         "nom": "12",
-        "image": "dents/12V.PNG"
+        "image": "dents/12V.WebP.PNG"
     },
     {
         "id": 8,
         "nom": "11",
-        "image": "dents/11V.PNG"
+        "image": "dents/11V.WebP.PNG"
     },
     {
         "id": 9,
         "nom": "21",
-        "image": "dents/21V.PNG"
+        "image": "dents/21V.WebP.PNG"
     },
     {
         "id": 10,
         "nom": "22",
-        "image": "dents/22V.PNG"
+        "image": "dents/22V.WebP.PNG"
     },
     {
         "id": 11,
         "nom": "23",
-        "image": "dents/23V.PNG"
+        "image": "dents/23V.WebP.PNG"
     },
     {
         "id": 12,
         "nom": "24",
-        "image": "dents/24V.PNG"
+        "image": "dents/24V.WebP.PNG"
     },
     {
         "id": 13,
         "nom": "25",
-        "image": "dents/25V.PNG"
+        "image": "dents/25V.WebP.PNG"
     },
     {
         "id": 14,
         "nom": "26",
-        "image": "dents/26V.PNG"
+        "image": "dents/26V.WebP.PNG"
     },
     {
         "id": 15,
         "nom": "27",
-        "image": "dents/27V.PNG"
+        "image": "dents/27V.WebP.PNG"
     },
     {
         "id": 16,
         "nom": "28",
-        "image": "dents/28V.PNG"
+        "image": "dents/28V.WebP.PNG"
     }
 ]
 

@@ -213,6 +213,7 @@
 
     // Initialiser le microphone
     function initialiserMicrophone() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then((stream) => {
                 console.log("Accès au microphone accordé.");
@@ -222,7 +223,12 @@
                 console.error("Accès au microphone refusé ou bloqué :", err);
                 alert("L'accès au microphone est requis pour utiliser l'assistance vocale.");
             });
+    } else {
+        console.error("L'API getUserMedia n'est pas prise en charge par ce navigateur.");
+        alert("Votre navigateur ne prend pas en charge l'utilisation du microphone. Veuillez utiliser un navigateur compatible.");
     }
+}
+
 
     // Débloquer la synthèse vocale (haut-parleurs)
     function unlockAudioContext() {
@@ -480,17 +486,25 @@ function handleCheckboxCommand(command) {
         return;
     }
 
-    // Boucle pour rechercher la cellule visible précédente
+    const previousInput = inputs[currentIndex - 1];
+    const currentCell = currentInput.closest('td');
+    const previousCell = previousInput.closest('td');
+
+    // Cas normal : champ précédent dans la même cellule ou cellule visible
+    if (previousCell && getComputedStyle(previousCell).display !== 'none' && previousCell === currentCell) {
+        console.log("Retour au champ précédent immédiat:", previousInput);
+        previousInput.focus();
+        previousInput.select();
+        return;
+    }
+
+    // Cas avec colonne masquée : aller au dernier champ de la cellule précédente visible
     for (let i = currentIndex - 1; i >= 0; i--) {
-        const previousInput = inputs[i];
-        const cell = previousInput.closest('td');
-        
-        // Vérifier que la cellule est visible et qu'elle est différente de la cellule actuelle
-        if (cell && getComputedStyle(cell).display !== 'none' && cell !== currentInput.closest('td')) {
-            // Obtenir tous les champs de saisie dans la cellule précédente visible
-            const visibleInputs = Array.from(cell.querySelectorAll('input[type="text"]')).filter(input => getComputedStyle(input).visibility !== 'hidden');
-            
-            // Si plusieurs champs sont trouvés, prendre le dernier
+        const potentialPreviousInput = inputs[i];
+        const potentialPreviousCell = potentialPreviousInput.closest('td');
+
+        if (potentialPreviousCell && getComputedStyle(potentialPreviousCell).display !== 'none' && potentialPreviousCell !== currentCell) {
+            const visibleInputs = Array.from(potentialPreviousCell.querySelectorAll('input[type="text"]')).filter(input => getComputedStyle(input).visibility !== 'hidden');
             if (visibleInputs.length > 0) {
                 const lastVisibleInput = visibleInputs[visibleInputs.length - 1];
                 console.log("Retour au dernier champ visible dans la cellule précédente:", lastVisibleInput);

@@ -2,81 +2,81 @@
     {
         "id": 1,
         "nom": "48",
-        "image": "dents/48V.PNG"
+        "image": "dents/48V.WebP.PNG"
     },
     {
         "id": 2,
         "nom": "47",
-        "image": "dents/47V.PNG"
+        "image": "dents/47V.WebP.PNG"
     },
     {
         "id": 3,
         "nom": "46",
-        "image": "dents/46V.PNG"
+        "image": "dents/46V.WebP.PNG"
     },
     {
         "id": 4,
         "nom": "45",
-        "image": "dents/45V.PNG"
+        "image": "dents/45V.WebP.PNG"
     },
     {
         "id": 5,
         "nom": "44",
-        "image": "dents/44V.PNG"
+        "image": "dents/44V.WebP.PNG"
     },
     {
         "id": 6,
         "nom": "43",
-        "image": "dents/43V.PNG"
+        "image": "dents/43V.WebP.PNG"
     },
     {
         "id": 7,
         "nom": "42",
-        "image": "dents/42V.PNG"
+        "image": "dents/42V.WebP.PNG"
     },
     {
         "id": 8,
         "nom": "41",
-        "image": "dents/41V.PNG"
+        "image": "dents/41V.WebP.PNG"
     },
     {
         "id": 9,
         "nom": "31",
-        "image": "dents/31V.PNG"
+        "image": "dents/31V.WebP.PNG"
     },
     {
         "id": 10,
         "nom": "32",
-        "image": "dents/32V.PNG"
+        "image": "dents/32V.WebP.PNG"
     },
     {
         "id": 11,
         "nom": "33",
-        "image": "dents/33V.PNG"
+        "image": "dents/33V.WebP.PNG"
     },
     {
         "id": 12,
         "nom": "34",
-        "image": "dents/34V.PNG"
+        "image": "dents/34V.WebP.PNG"
     },
     {
         "id": 13,
         "nom": "35",
-        "image": "dents/35V.PNG"
+        "image": "dents/35V.WebP.PNG"
     },
     {
         "id": 14,
         "nom": "36",
-        "image": "dents/36V.PNG"
+        "image": "dents/36V.WebP.PNG"
     },
     {
         "id": 15,
         "nom": "37",
-        "image": "dents/37V.PNG"
+        "image": "dents/37V.WebP.PNG"
     },
     {
         "id": 16,
         "nom": "38",
-        "image": "dents/38V.PNG"
+        "image": "dents/38V.WebP.PNG"
     }
 ]
