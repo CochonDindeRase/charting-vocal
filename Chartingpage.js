@@ -1298,33 +1298,39 @@ function hideLoading() {
 
             // Remplir les champs de saisie avec gestion des signes
             function fillInputFields(values, command) {
-                const activeElement = document.activeElement;
-                console.log("Remplissage du champ avec la valeur:", values[0], "dans l'élément:", activeElement);
-
-                if (activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text') {
-                    isVoiceCommand = true; // Indique que la commande vocale est en cours
-
-                    let value = values[0];
-
-                    // Si l'utilisateur spécifie "plus" ou "moins", ajuster le signe
-                    if (command && (command.includes("plus") || command.includes("+"))) {
-                        console.log("Commande 'plus' détectée, valeur positive.");
-                        value = Math.abs(value); // S'assurer que la valeur est positive
-                    } else if (isNiveauGingivalLine(activeElement)) {
-                        console.log("Valeur négative par défaut pour 'Niveau Gingival'.");
-                        value = -Math.abs(value); // Valeur négative par défaut
-                    }
-
-                    activeElement.value = value; // Remplir le champ avec la valeur
-                    activeElement.dispatchEvent(new Event('input'));
-                    speakValue(value);
-                    simulateEnterKeyPress(activeElement); // Simuler "Enter" pour passer au champ suivant
-
-                    setTimeout(() => {
-                        isVoiceCommand = false; // Désactiver après la fin de la commande vocale
-                    }, 500);
-                }
-            }
+              const activeElement = document.activeElement;
+              console.log("Remplissage du champ avec la valeur:", values[0], "dans l'élément:", activeElement);
+          
+              if (activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text') {
+                  isVoiceCommand = true; // Indique que la commande vocale est en cours
+          
+                  let value = values[0];
+          
+                  // Si l'utilisateur spécifie "plus" ou "moins", ajuster le signe
+                  if (command && (command.includes("plus") || command.includes("+"))) {
+                      console.log("Commande 'plus' détectée, valeur positive.");
+                      value = Math.abs(value); // S'assurer que la valeur est positive
+                  } else if (isNiveauGingivalLine(activeElement)) {
+                      console.log("Valeur négative par défaut pour 'Niveau Gingival'.");
+                      value = -Math.abs(value); // Valeur négative par défaut
+                  }
+          
+                  activeElement.value = value; // Remplir le champ avec la valeur
+                  activeElement.dispatchEvent(new Event('input'));
+          
+                  // Assurez-vous que la synthèse vocale n'est appelée qu'une seule fois par commande
+                  if (!isProcessingCommand) {
+                      speakValue(value);
+                  }
+          
+                  simulateEnterKeyPress(activeElement); // Simuler "Enter" pour passer au champ suivant
+          
+                  setTimeout(() => {
+                      isVoiceCommand = false; // Désactiver après la fin de la commande vocale
+                  }, 500);
+              }
+          }
+          
 
 
                 // Vérifie si le champ actif est dans la deuxième ligne (Niveau Gingival)
