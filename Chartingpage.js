@@ -1158,5 +1158,404 @@ function hideLoading() {
   document.getElementById('loading-overlay').style.display = 'none';
 }
 
+//  ASSISTANCE VOCALE :
+
+                let currentInputIndex = 0;
+                let inputs;
+                let isProcessingCommand = false;
+                let processedCommands = new Set(); // Ensemble des commandes déjà traitées
+                let isVoiceCommand = false;
+
+                // Liste des variations orthographiques pour chaque commande
+                const commandSynonyms = {
+                    "saignement vestibulaire": ["saignement vestibulaire", "saignements vestibulaires", "enseignement vestibulaire"],
+                    "saignement mésial": ["saignement mésial", "saignements mésial", "méssial"],
+                    // Ajoute des variations pour les autres commandes ici...
+                };
+
+                // Fonction pour normaliser la commande
+                function normalizeCommand(command) {
+                    for (let key in commandSynonyms) {
+                        if (commandSynonyms[key].includes(command)) {
+                            return key; // Retourne la commande normalisée
+                        }
+                    }
+                    return command; // Si aucune variation n'est trouvée, retourne la commande originale
+                }
+
+                // Clé API Azure et région
+                const subscriptionKey = "4d084ab2c53e4dbf9e491c0fe16507d6";
+                const serviceRegion = "francecentral";
+
+                // Initialiser le microphone
+                function initialiserMicrophone() {
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then((stream) => {
+                            console.log("Accès au microphone accordé.");
+                            startVoiceRecognition();
+                        })
+                        .catch((err) => {
+                            console.error("Accès au microphone refusé ou bloqué :", err);
+                            alert("L'accès au microphone est requis pour utiliser l'assistance vocale.");
+                        });
+                } else {
+                    console.error("L'API getUserMedia n'est pas prise en charge par ce navigateur.");
+                    alert("Votre navigateur ne prend pas en charge l'utilisation du microphone. Veuillez utiliser un navigateur compatible.");
+                }
+            }
+
+
+                // Débloquer la synthèse vocale (haut-parleurs)
+                function unlockAudioContext() {
+                    document.body.addEventListener('click', () => {
+                        const utterance = new SpeechSynthesisUtterance('');
+                        speechSynthesis.speak(utterance);
+                        console.log('Haut-parleurs débloqués via interaction utilisateur');
+                    }, { once: true });
+                }
+
+                // Fonction pour afficher le nouveau cercle de chargement
+                function showNewLoadingSpinner() {
+                    console.log("Affichage du nouveau cercle de chargement.");
+                    const spinner = document.getElementById('new-loading-spinner');
+                    if (spinner) {
+                        spinner.style.display = 'block'; // Afficher le spinner
+                    }
+                }
+
+                // Fonction pour masquer le nouveau cercle de chargement
+                function hideNewLoadingSpinner() {
+                    console.log("Masquage du nouveau cercle de chargement.");
+                    const spinner = document.getElementById('new-loading-spinner');
+                    if (spinner) {
+                        spinner.style.display = 'none'; // Masquer le spinner
+                    }
+                }
+
+                // Démarrer la reconnaissance vocale
+                function startVoiceRecognition() {
+                    const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+                    speechConfig.speechRecognitionLanguage = "fr-FR";
+                    const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+                    const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+                    // Afficher le cercle dès que l'API détecte un son (avant la reconnaissance du texte)
+                    recognizer.recognizing = (s, event) => {
+                        console.log('Son détecté, affichage du cercle de chargement.');
+                        showNewLoadingSpinner(); // Afficher le cercle dès que du son est détecté
+                    };
+
+                    // Traiter les résultats de la reconnaissance
+                    recognizer.recognized = (s, event) => {
+                        console.log('Texte reconnu:', event.result.text);
+                        if (isProcessingCommand) return;
+                        const command = event.result.text.trim().toLowerCase();
+                        processVoiceCommand(command); // Traiter la commande
+                    };
+
+                    recognizer.onerror = (event) => {
+                        console.error('Erreur de reconnaissance vocale:', event.error);
+                        hideNewLoadingSpinner(); // Masquer le cercle en cas d'erreur
+                    };
+
+                    recognizer.onend = () => {
+                        hideNewLoadingSpinner(); // Masquer le cercle à la fin de la reconnaissance
+                        setTimeout(() => recognizer.start(), 50); // Redémarrer la reconnaissance
+                    };
+
+                    recognizer.startContinuousRecognitionAsync();
+                }
+
+                // Traiter les commandes vocales
+                function processVoiceCommand(command) {
+                    console.log("Commande à traiter:", command);
+                    isProcessingCommand = true;
+
+                    // Normaliser la commande pour éviter les variations orthographiques
+                    const normalizedCommand = normalizeCommand(command);
+
+                    if (normalizedCommand.includes("retour")) {
+                        focusPreviousInput();  // Déplacement vers le champ précédent
+                    } else if (normalizedCommand.includes("un") || normalizedCommand.includes("une")) {
+                        fillInputFields([1], normalizedCommand); // Passer la commande vocale
+                    } else if (normalizedCommand.includes("deux") || normalizedCommand.includes("de")) {
+                        fillInputFields([2], normalizedCommand); // Passer la commande vocale
+                    } else if (normalizedCommand.match(/saignement|plaque/)) {
+                        handleCheckboxCommand(normalizedCommand); // Traiter les cases à cocher
+                    } else {
+                        const values = normalizedCommand.match(/\d+/g);
+                        if (values) {
+                            fillInputFields(values, normalizedCommand); // Passer la commande vocale
+                        }
+                    }
+
+                    setTimeout(() => {
+                        hideNewLoadingSpinner(); // Masquer après traitement
+                        isProcessingCommand = false;
+                    }, 500); // Délai général pour masquer
+                }
+
+            // Remplir les champs de saisie avec gestion des signes
+            function fillInputFields(values, command) {
+                const activeElement = document.activeElement;
+                console.log("Remplissage du champ avec la valeur:", values[0], "dans l'élément:", activeElement);
+
+                if (activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text') {
+                    isVoiceCommand = true; // Indique que la commande vocale est en cours
+
+                    let value = values[0];
+
+                    // Si l'utilisateur spécifie "plus" ou "moins", ajuster le signe
+                    if (command && (command.includes("plus") || command.includes("+"))) {
+                        console.log("Commande 'plus' détectée, valeur positive.");
+                        value = Math.abs(value); // S'assurer que la valeur est positive
+                    } else if (isNiveauGingivalLine(activeElement)) {
+                        console.log("Valeur négative par défaut pour 'Niveau Gingival'.");
+                        value = -Math.abs(value); // Valeur négative par défaut
+                    }
+
+                    activeElement.value = value; // Remplir le champ avec la valeur
+                    activeElement.dispatchEvent(new Event('input'));
+                    speakValue(value);
+                    simulateEnterKeyPress(activeElement); // Simuler "Enter" pour passer au champ suivant
+
+                    setTimeout(() => {
+                        isVoiceCommand = false; // Désactiver après la fin de la commande vocale
+                    }, 500);
+                }
+            }
+
+
+                // Vérifie si le champ actif est dans la deuxième ligne (Niveau Gingival)
+                function isNiveauGingivalLine(inputElement) {
+                    const row = inputElement.closest('tr');
+                    const rowIndex = row.rowIndex; // Indice de la ligne dans le tableau
+                    return rowIndex === 1; // Cible spécifiquement la deuxième ligne du tableau
+                }
+
+                // Simuler la touche "Entrée"
+                function simulateEnterKeyPress(inputElement) {
+                    console.log("Simulation de la touche 'Entrée' dans l'élément:", inputElement);
+                    const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+                    inputElement.dispatchEvent(event);
+                }
+
+            // Ajoutez cette fonction pour calculer le pourcentage de plaque
+            function calculatePlaquePercentage2() {
+              const plaqueCheckboxes = document.querySelectorAll('.custom-checkbox2');
+              const totalPlaqueCheckboxes = plaqueCheckboxes.length;
+              const checkedPlaqueCheckboxes = Array.from(plaqueCheckboxes).filter(checkbox => checkbox.checked).length;
+
+              const percentage = (checkedPlaqueCheckboxes / totalPlaqueCheckboxes) * 100;
+              return percentage.toFixed(2); // Retourne le pourcentage avec 2 décimales
+            }
+
+            // Mettez à jour le pourcentage de plaque dans le DOM et remplissez la barre de progression
+            function updatePlaquePercentage2() {
+              const percentage = calculatePlaquePercentage2();
+              document.getElementById('plaque-percentage').textContent = `${percentage}%`;
+              
+              const plaqueBar = document.getElementById('plaque-bar');
+              plaqueBar.style.width = `${percentage}%`; // Ajuste la largeur de la barre en fonction du pourcentage
+              plaqueBar.setAttribute('aria-valuenow', percentage);
+            }
+
+            // Ajoutez cette fonction pour calculer le pourcentage de saignement
+            function calculateSaignementPercentage2() {
+              const saignementCheckboxes = document.querySelectorAll('.custom-checkbox3');
+              const totalSaignementCheckboxes = saignementCheckboxes.length;
+              const checkedSaignementCheckboxes = Array.from(saignementCheckboxes).filter(checkbox => checkbox.checked).length;
+
+              const percentage = (checkedSaignementCheckboxes / totalSaignementCheckboxes) * 100;
+              return percentage.toFixed(2); // Retourne le pourcentage avec 2 décimales
+            }
+
+            // Mettez à jour le pourcentage de saignement dans le DOM et remplissez la barre de progression
+            function updateSaignementPercentage2() {
+              const percentage = calculateSaignementPercentage2();
+              document.getElementById('saignement-percentage').textContent = `${percentage}%`;
+              
+              const saignementBar = document.getElementById('saignement-bar');
+              saignementBar.style.width = `${percentage}%`; // Ajuste la largeur de la barre en fonction du pourcentage
+              saignementBar.setAttribute('aria-valuenow', percentage);
+            }
+
+            // Gérer les cases à cocher via commandes vocales
+            function handleCheckboxCommand(command) {
+                console.log("Commande détectée pour case à cocher:", command);
+
+                const defaultPositionMap = {
+                    'mésio': 2, 'vestibulaire': 1, 'palatin': 1, 'disto': 0, 'distal': 0,
+                    'mésial': 2, 'méziale': 2, 'métiale': 2, 'méssiale': 2, 'mézial': 2,
+                    'métial': 2, 'méssial': 2
+                };
+
+                const modifiedPositionMap = {
+                    'mésio': 0, 'vestibulaire': 1, 'palatin': 1, 'disto': 2, 'distal': 2,
+                    'mésial': 0, 'méziale': 0, 'métiale': 0, 'méssiale': 0, 'mézial': 0,
+                    'métial': 0, 'méssial': 0
+                };
+
+                const positionIdentifiers = command.match(/mésio|vestibulaire|palatin|disto|distal|mésial|méziale|métiale|méssiale|mézial|métial|méssial/g);
+                const rowIdentifier = command.match(/saignement|plaque/i);
+
+                if (positionIdentifiers && rowIdentifier) {
+                    console.log("Commande case détectée:", rowIdentifier[0], positionIdentifiers);
+                    const table = document.activeElement.closest('table');
+                    const columnIdx = document.activeElement.closest('td').cellIndex;
+                    const rowIdx = rowIdentifier[0].toLowerCase() === "saignement" ? 4 : 5;
+                    const targetRow = table.querySelector(`tr:nth-child(${rowIdx})`);
+                    const targetCell = targetRow.querySelector(`td:nth-child(${columnIdx + 1})`);
+                    const checkboxes = targetCell.querySelectorAll('input[type="checkbox"]');
+
+                    positionIdentifiers.forEach((identifier) => {
+                        const positionIdx = columnIdx >= 8 ? modifiedPositionMap[identifier] : defaultPositionMap[identifier];
+                        if (checkboxes && checkboxes[positionIdx]) {
+                            // Cocher ou décocher la case et déclencher l'événement change
+                            checkboxes[positionIdx].checked = !checkboxes[positionIdx].checked;
+                            checkboxes[positionIdx].dispatchEvent(new Event('change')); // Déclencher l'événement 'change'
+                            console.log("Case", identifier, "cochée/décochée.");
+                        }
+                    });
+
+                    // Utilisation d'un délai pour laisser le temps à l'assistant de continuer après la mise à jour
+                    setTimeout(() => {
+                        if (rowIdentifier[0].toLowerCase() === "saignement") {
+                            updateSaignementPercentage2(); // Mettre à jour le pourcentage pour saignement
+                        } else if (rowIdentifier[0].toLowerCase() === "plaque") {
+                            updatePlaquePercentage2(); // Mettre à jour le pourcentage pour plaque
+                        }
+                    }, 100); // Petit délai pour éviter l'interruption
+
+                    // Faire parler la commande après traitement
+                    speakCommand(`${rowIdentifier} ${positionIdentifiers.join(' ')}`);
+                }
+            }
+
+
+
+                // Prononcer la valeur
+                function speakValue(value) {
+                    console.log("Prononciation de la valeur:", value);
+                    const utterance = new SpeechSynthesisUtterance(value);
+                    utterance.lang = 'fr-FR';
+                    speechSynthesis.speak(utterance);
+                }
+
+                // Prononcer la commande
+                function speakCommand(command) {
+                    console.log("Prononciation de la commande:", command);
+                    const utterance = new SpeechSynthesisUtterance(command);
+                    utterance.lang = 'fr-FR';
+                    speechSynthesis.speak(utterance);
+                }
+
+                // Déplacer le focus vers le champ précédent
+                function focusPreviousInput() {
+                const currentInput = document.activeElement;
+                const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
+                const currentIndex = inputs.indexOf(currentInput);
+
+                if (currentIndex <= 0) {
+                    console.log("Vous êtes déjà sur le premier élément.");
+                    return;
+                }
+
+                const previousInput = inputs[currentIndex - 1];
+                const currentCell = currentInput.closest('td');
+                const previousCell = previousInput.closest('td');
+
+                // Cas normal : champ précédent dans la même cellule ou cellule visible
+                if (previousCell && getComputedStyle(previousCell).display !== 'none' && previousCell === currentCell) {
+                    console.log("Retour au champ précédent immédiat:", previousInput);
+                    previousInput.focus();
+                    previousInput.select();
+                    return;
+                }
+
+                // Cas avec colonne masquée : aller au dernier champ de la cellule précédente visible
+                for (let i = currentIndex - 1; i >= 0; i--) {
+                    const potentialPreviousInput = inputs[i];
+                    const potentialPreviousCell = potentialPreviousInput.closest('td');
+
+                    if (potentialPreviousCell && getComputedStyle(potentialPreviousCell).display !== 'none' && potentialPreviousCell !== currentCell) {
+                        const visibleInputs = Array.from(potentialPreviousCell.querySelectorAll('input[type="text"]')).filter(input => getComputedStyle(input).visibility !== 'hidden');
+                        if (visibleInputs.length > 0) {
+                            const lastVisibleInput = visibleInputs[visibleInputs.length - 1];
+                            console.log("Retour au dernier champ visible dans la cellule précédente:", lastVisibleInput);
+                            lastVisibleInput.focus();
+                            lastVisibleInput.select();
+                            return;
+                        }
+                    }
+                }
+
+                console.log("Aucun élément précédent visible trouvé.");
+            }
+
+
+                // Initialisation des champs de saisie
+                document.addEventListener('DOMContentLoaded', () => {
+                    inputs = document.querySelectorAll('input[type="text"]');
+                    unlockAudioContext();
+                    initialiserMicrophone();
+
+                    inputs.forEach((input, index) => {
+                        input.addEventListener('focus', () => {
+                            console.log("Focus sur l'élément d'index:", index);
+                            currentInputIndex = index;
+                        });
+                        input.addEventListener('input', () => speakValue(input.value));
+                        input.addEventListener('keydown', (event) => {
+                            if (event.key === 'Enter') {
+                                let nextInput = findNextVisibleInput2(input);
+                                if (nextInput) {
+                                    console.log("Focus sur l'élément suivant:", nextInput);
+                                    nextInput.focus();
+                                    nextInput.select();
+                                } else {
+                                    const targetRowIndex = input.closest('tr').rowIndex;
+                                    const currentTableIndex = tableContainers.indexOf(input.closest('table').parentNode.id);
+                                    nextInput = findFirstVisibleInputInNextTable2(currentTableIndex, targetRowIndex);
+                                    if (nextInput) {
+                                        console.log("Focus sur l'élément dans la table suivante:", nextInput);
+                                        nextInput.focus();
+                                        nextInput.select();
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
+
+                // Navigation entre les champs de saisie
+                function findNextVisibleInput2(currentInput) {
+                const inputs = Array.from(document.querySelectorAll('input[type="text"]')); // Liste de tous les champs
+                const currentIndex = inputs.indexOf(currentInput); // Obtenir l'index du champ actuel
+
+                // Vérifie le champ suivant dans l'ordre du DOM
+                for (let i = currentIndex + 1; i < inputs.length; i++) {
+                    const nextInput = inputs[i];
+                    if (nextInput && getComputedStyle(nextInput).visibility !== 'hidden') {
+                        return nextInput;
+                    }
+                }
+                return null;
+            }
+
+
+                function findFirstVisibleInputInNextTable2(currentTableIndex, targetRowIndex) {
+                    const nextTableIndex = getNextTableIndex2(currentTableIndex);
+                    const nextTableContainer = document.getElementById(tableContainers[nextTableIndex]);
+                    let nextInput = nextTableContainer.querySelector(`tr:nth-child(${targetRowIndex + 1}) td input[type="text"]:not([style*="visibility: hidden"])`);
+                    if (!nextInput) nextInput = nextTableContainer.querySelector('tr td input[type="text"]:not([style*="visibility: hidden"])');
+                    return nextInput;
+                }
+
+                function getNextTableIndex2(currentTableIndex) {
+                    return (currentTableIndex + 1) % tableContainers.length;
+                }
+
 
 
