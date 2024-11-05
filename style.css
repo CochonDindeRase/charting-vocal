@@ -2418,3 +2418,85 @@ z-index: 5; /* Un z-index plus élevé pour s'assurer que les boutons de défile
 .loading-dots .dot:nth-child(3) {
   animation-delay: 0.6s;
 }
+
+
+/* Deuxième item explication tableau */
+
+.carousel-caption {
+  display: flex;
+  justify-content: center; /* Centre le texte horizontalement */
+  top: 50%; /* Place le conteneur au milieu de l'image */
+  left: 50%; /* Place le conteneur au centre horizontal */
+  transform: translate(-50%, -50%); /* Centre parfaitement le conteneur */
+  align-items: center; /* Centre le texte verticalement */
+  width: 100%; /* Couvre toute la largeur de l'image */
+}
+
+.carousel-item img {
+  width: 100%;
+  filter: none; /* Garde l'image intacte */
+}
+
+.carousel-caption h5 {
+  font-size: 1.7vw; /* Ajuste la taille de la police selon la largeur de la fenêtre */
+}
+
+
+.carousel-caption p {
+  font-size: 1.4vw; /* Ajuste la taille de la police selon la largeur de la fenêtre */
+}
+
+/* Médias-queries pour ajuster la taille du texte sur petits écrans */
+@media (max-width: 576px) {
+  .carousel-caption h5 {
+    font-size: 2.7vw;   /* Taille légèrement plus grande sur petits écrans */
+  }
+  
+  
+  .carousel-caption p {
+    font-size: 2.4vw;   /* Taille légèrement plus grande sur petits écrans */
+  }
+
+  .carousel-caption-etoile {
+    font-size: 0.7vw;   /* Taille légèrement plus grande sur petits écrans */
+  }
+}
+
+
+
+/* Couleur champ sélectionné */
+::selection {
+  background-color: #00eeff89; /* Surlignage bleu clair */
+  color: black; /* Couleur du texte sur le surlignage */
+}
+
+input[type="text"]::selection {
+  background-color: #00eeff89; /* Surlignage bleu clair */
+  color: black; /* Couleur du texte sur le surlignage */
+  margin: 0; /* Enlève l'espace extérieur */
+  padding: 0; /* Enlève l'espace intérieur */
+}
+
+input[type="text"]:focus {
+  outline: 2px solid orange; /* Contour personnalisé */
+  outline-offset: -2px; /* Décale le contour pour qu'il colle à l'élément */
+  border-radius: 4px; /* Arrondit les coins */
+  margin: 0; /* Supprime les marges */
+  padding: 0; /* Supprime l'espace intérieur */
+  box-sizing: border-box; /* Inclut les bordures dans la taille totale */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

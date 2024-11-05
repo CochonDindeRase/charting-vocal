@@ -1021,3 +1021,26 @@ body {
   background: transparent;
   white-space: nowrap;
 }
+
+
+/* Couleur champ sélectionné */
+::selection {
+  background-color: #00eeff89; /* Surlignage bleu clair */
+  color: black; /* Couleur du texte sur le surlignage */
+}
+
+input[type="text"]::selection {
+  background-color: #00eeff89; /* Surlignage bleu clair */
+  color: black; /* Couleur du texte sur le surlignage */
+  margin: 0; /* Enlève l'espace extérieur */
+  padding: 0; /* Enlève l'espace intérieur */
+}
+
+input[type="text"]:focus {
+  outline: 2px solid orange; /* Contour personnalisé */
+  outline-offset: -2px; /* Décale le contour pour qu'il colle à l'élément */
+  border-radius: 4px; /* Arrondit les coins */
+  margin: 0; /* Supprime les marges */
+  padding: 0; /* Supprime l'espace intérieur */
+  box-sizing: border-box; /* Inclut les bordures dans la taille totale */
+}

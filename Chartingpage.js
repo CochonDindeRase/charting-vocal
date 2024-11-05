@@ -295,32 +295,35 @@ function attachClickHandlers() {
   });
 }
 
-// Fonction pour gérer les clics sur les cellules
 function handleTableCellClick(event, prefix) {
   const targetCell = event.target.closest('td, th');
 
   if (!targetCell) {
-    console.warn("Aucune cellule valide détectée lors du clic.");
-    return;
+      console.warn("Aucune cellule valide détectée lors du clic.");
+      return;
+  }
+
+  // Ignorer les clics sur les cellules contenant des éléments interactifs
+  if (targetCell.querySelector('select, input, .custom-checkbox1, .custom-checkbox2, .custom-checkbox3')) {
+      return; // Ignore le clic si un élément interactif est trouvé dans la cellule
   }
 
   console.log("Cellule cliquée détectée :", targetCell);
-  
+
   const cellIndex = targetCell.cellIndex + 1; // +1 pour correspondre à l'index CSS
   const cellValue = targetCell.innerText.trim();
   if (!cellValue) {
-    console.warn("Aucune valeur dans la cellule cliquée :", targetCell);
-    return;
+      console.warn("Aucune valeur dans la cellule cliquée :", targetCell);
+      return;
   }
 
   const imageId = `${prefix}img-${cellValue}`;
   const imageElement = document.getElementById(imageId);
 
   if (!imageElement) {
-    console.warn("Aucune image trouvée avec l'ID :", imageId);
+      console.warn("Aucune image trouvée avec l'ID :", imageId);
   }
 
-  // Gestion du masquage/affichage des images et du contenu des cellules
   const cells = targetCell.closest('table').querySelectorAll(`tr td:nth-child(${cellIndex}), tr th:nth-child(${cellIndex})`);
   let isContentVisible = targetCell.dataset.contentVisible === 'true';
 
@@ -331,14 +334,18 @@ function handleTableCellClick(event, prefix) {
           if (imageElement) imageElement.style.visibility = isContentVisible ? 'visible' : 'hidden';
       } else { // Autres cellules de la colonne
           cell.style.visibility = isContentVisible ? '' : 'hidden';
-          // Gérer les bords horizontaux pour les cellules rendues invisibles
           cell.style.borderTop = cell.style.borderBottom = isContentVisible ? '' : '0';
       }
   });
 
-  // Après la mise à jour de la visibilité, ajustez les bords verticaux des cellules si nécessaire
+  // Mettre à jour le nombre total de cases à cocher après le masquage/réaffichage
+  updateTotalCheckboxCounts();
+
+  // Ajuster les bords verticaux des cellules si nécessaire
   adjustVerticalBorders(targetCell.closest('table'));
 }
+
+
 
 
 
@@ -467,12 +474,10 @@ return nextInput;
 
 // Ajoutez cette fonction pour calculer le pourcentage de plaque
 function calculatePlaquePercentage() {
-const plaqueCheckboxes = document.querySelectorAll('.custom-checkbox2');
-const totalPlaqueCheckboxes = plaqueCheckboxes.length;
-const checkedPlaqueCheckboxes = Array.from(plaqueCheckboxes).filter(checkbox => checkbox.checked).length;
-
-const percentage = (checkedPlaqueCheckboxes / totalPlaqueCheckboxes) * 100;
-return percentage.toFixed(2); // Retourne le pourcentage avec 2 décimales
+  const visiblePlaqueCheckboxes = Array.from(document.querySelectorAll('.custom-checkbox2')).filter(cb => getComputedStyle(cb.closest('td')).visibility !== 'hidden');
+  const checkedPlaqueCheckboxes = visiblePlaqueCheckboxes.filter(checkbox => checkbox.checked).length;
+  const percentage = (checkedPlaqueCheckboxes / visiblePlaqueCheckboxes.length) * 100;
+  return visiblePlaqueCheckboxes.length > 0 ? percentage.toFixed(2) : '0.00';
 }
 
 // Mettez à jour le pourcentage de plaque dans le DOM et remplissez la barre de progression
@@ -499,12 +504,10 @@ updatePlaquePercentage();
 
 // Fonction pour calculer le pourcentage de cases cochées pour la ligne "Saignement"
 function calculateSaignementPercentage() {
-const saignementCheckboxes = document.querySelectorAll('.custom-checkbox3');
-const totalSaignementCheckboxes = saignementCheckboxes.length;
-const checkedSaignementCheckboxes = Array.from(saignementCheckboxes).filter(checkbox => checkbox.checked).length;
-
-const percentage = (checkedSaignementCheckboxes / totalSaignementCheckboxes) * 100;
-return percentage.toFixed(2); // Retourne le pourcentage avec 2 décimales
+  const visibleSaignementCheckboxes = Array.from(document.querySelectorAll('.custom-checkbox3')).filter(cb => getComputedStyle(cb.closest('td')).visibility !== 'hidden');
+  const checkedSaignementCheckboxes = visibleSaignementCheckboxes.filter(checkbox => checkbox.checked).length;
+  const percentage = (checkedSaignementCheckboxes / visibleSaignementCheckboxes.length) * 100;
+  return visibleSaignementCheckboxes.length > 0 ? percentage.toFixed(2) : '0.00';
 }
 
 // Mettez à jour le pourcentage de saignement dans le DOM et remplissez la barre de progression
@@ -1350,42 +1353,78 @@ function hideLoading() {
             // Ajoutez cette fonction pour calculer le pourcentage de plaque
             function calculatePlaquePercentage2() {
               const plaqueCheckboxes = document.querySelectorAll('.custom-checkbox2');
-              const totalPlaqueCheckboxes = plaqueCheckboxes.length;
-              const checkedPlaqueCheckboxes = Array.from(plaqueCheckboxes).filter(checkbox => checkbox.checked).length;
-
-              const percentage = (checkedPlaqueCheckboxes / totalPlaqueCheckboxes) * 100;
-              return percentage.toFixed(2); // Retourne le pourcentage avec 2 décimales
-            }
+              const visiblePlaqueCheckboxes = Array.from(plaqueCheckboxes).filter(checkbox => {
+                  return getComputedStyle(checkbox.closest('td')).visibility !== 'hidden';
+              });
+              const checkedPlaqueCheckboxes = visiblePlaqueCheckboxes.filter(checkbox => checkbox.checked).length;
+          
+              const percentage = (checkedPlaqueCheckboxes / visiblePlaqueCheckboxes.length) * 100;
+              return visiblePlaqueCheckboxes.length ? percentage.toFixed(2) : '0.00'; // Retourne le pourcentage avec 2 décimales
+          }
+          
 
             // Mettez à jour le pourcentage de plaque dans le DOM et remplissez la barre de progression
             function updatePlaquePercentage2() {
               const percentage = calculatePlaquePercentage2();
               document.getElementById('plaque-percentage').textContent = `${percentage}%`;
-              
+          
               const plaqueBar = document.getElementById('plaque-bar');
               plaqueBar.style.width = `${percentage}%`; // Ajuste la largeur de la barre en fonction du pourcentage
               plaqueBar.setAttribute('aria-valuenow', percentage);
-            }
+          }
+          
 
             // Ajoutez cette fonction pour calculer le pourcentage de saignement
             function calculateSaignementPercentage2() {
               const saignementCheckboxes = document.querySelectorAll('.custom-checkbox3');
-              const totalSaignementCheckboxes = saignementCheckboxes.length;
-              const checkedSaignementCheckboxes = Array.from(saignementCheckboxes).filter(checkbox => checkbox.checked).length;
-
-              const percentage = (checkedSaignementCheckboxes / totalSaignementCheckboxes) * 100;
-              return percentage.toFixed(2); // Retourne le pourcentage avec 2 décimales
-            }
+              const visibleSaignementCheckboxes = Array.from(saignementCheckboxes).filter(checkbox => {
+                  return getComputedStyle(checkbox.closest('td')).visibility !== 'hidden';
+              });
+              const checkedSaignementCheckboxes = visibleSaignementCheckboxes.filter(checkbox => checkbox.checked).length;
+          
+              const percentage = (checkedSaignementCheckboxes / visibleSaignementCheckboxes.length) * 100;
+              return visibleSaignementCheckboxes.length ? percentage.toFixed(2) : '0.00'; // Retourne le pourcentage avec 2 décimales
+          }
+          
 
             // Mettez à jour le pourcentage de saignement dans le DOM et remplissez la barre de progression
             function updateSaignementPercentage2() {
               const percentage = calculateSaignementPercentage2();
               document.getElementById('saignement-percentage').textContent = `${percentage}%`;
-              
+          
               const saignementBar = document.getElementById('saignement-bar');
               saignementBar.style.width = `${percentage}%`; // Ajuste la largeur de la barre en fonction du pourcentage
               saignementBar.setAttribute('aria-valuenow', percentage);
-            }
+          }
+
+
+
+          function updateTotalCheckboxCounts() {
+            const visiblePlaqueCheckboxes = Array.from(document.querySelectorAll('.custom-checkbox2')).filter(cb => getComputedStyle(cb.closest('td')).visibility !== 'hidden');
+            const visibleSaignementCheckboxes = Array.from(document.querySelectorAll('.custom-checkbox3')).filter(cb => getComputedStyle(cb.closest('td')).visibility !== 'hidden');
+        
+            const totalVisiblePlaque = visiblePlaqueCheckboxes.length;
+            const totalVisibleSaignement = visibleSaignementCheckboxes.length;
+        
+        
+            updatePlaquePercentage(); // Update plaque percentage with visible checkboxes
+            updateSaignementPercentage(); // Update saignement percentage with visible checkboxes
+            updatePlaquePercentage2(); // Update plaque percentage for the voice assistant
+            updateSaignementPercentage2(); // Update saignement percentage for the voice assistant
+        }
+        
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+          updatePlaquePercentage();
+          updateSaignementPercentage();
+          updatePlaquePercentage2(); // Mettez à jour le pourcentage de plaque
+          updateSaignementPercentage2(); // Mettez à jour le pourcentage de saignement
+          updateTotalCheckboxCounts(); // Initialisez le total des cases visibles
+      });
+      
+        
+          
 
             // Gérer les cases à cocher via commandes vocales
             function handleCheckboxCommand(command) {

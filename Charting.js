@@ -331,42 +331,50 @@ document.getElementById('quatre-table-container').addEventListener('click', func
     handleTableCellClick(event, 'mandP-');
 });
 }
+
 // Fonction pour gérer les clics sur les cellules
 function handleTableCellClick(event, prefix) {
-if (event.target.tagName === 'TD' || event.target.tagName === 'TH') {
-    const cellIndex = event.target.cellIndex + 1; // +1 pour correspondre à l'index CSS
-    const cellValue = event.target.innerText.trim();
-    if (!cellValue) return; // Ignore les clics sur des cellules vides ou non numériques
+  if (event.target.tagName === 'TD' || event.target.tagName === 'TH') {
+      // Ignorer les cellules avec des éléments interactifs
+      if (event.target.querySelector('select, input')) {
+          return;
+      }
 
-    // Vérifier si la colonne cliquée est la dernière colonne
-    const table = event.target.closest('table');
-    const isLastColumn = cellIndex === table.rows[0].cells.length;
+      const cellIndex = event.target.cellIndex + 1;
+      const cellValue = event.target.innerText.trim();
+      if (!cellValue) return;
 
-    if (!isLastColumn) { // N'appliquer la fonctionnalité que si ce n'est pas la dernière colonne
-        const imageId = `${prefix}img-${cellValue}`;
-        const imageElement = document.getElementById(imageId);
+      const table = event.target.closest('table');
+      const isLastColumn = cellIndex === table.rows[0].cells.length;
 
-        // Gestion du masquage/affichage des images et du contenu des cellules
-        const cells = table.querySelectorAll(`tr td:nth-child(${cellIndex}), tr th:nth-child(${cellIndex})`);
-        let isContentVisible = event.target.dataset.contentVisible === 'true';
+      if (!isLastColumn) {
+          const imageId = `${prefix}img-${cellValue}`;
+          const imageElement = document.getElementById(imageId);
 
-        cells.forEach(cell => {
-            if (cell === event.target) { // Cellule cliquée
-                cell.style.textDecoration = isContentVisible ? '' : 'line-through';
-                cell.dataset.contentVisible = !isContentVisible;
-                if (imageElement) imageElement.style.visibility = isContentVisible ? 'visible' : 'hidden';
-            } else { // Autres cellules de la colonne
-                cell.style.visibility = isContentVisible ? '' : 'hidden';
-                // Gérer les bords horizontaux pour les cellules rendues invisibles
-                cell.style.borderTop = cell.style.borderBottom = isContentVisible ? '' : '0';
-            }
-        });
+          // Masquage/affichage des images et des cellules
+          const cells = table.querySelectorAll(`tr td:nth-child(${cellIndex}), tr th:nth-child(${cellIndex})`);
+          let isContentVisible = event.target.dataset.contentVisible === 'true';
 
-        // Après la mise à jour de la visibilité, ajustez les bords verticaux des cellules si nécessaire
-        adjustVerticalBorders(table);
-    }
+          cells.forEach(cell => {
+              if (cell === event.target) {
+                  cell.style.textDecoration = isContentVisible ? '' : 'line-through';
+                  cell.dataset.contentVisible = !isContentVisible;
+                  if (imageElement) imageElement.style.visibility = isContentVisible ? 'visible' : 'hidden';
+              } else {
+                  cell.style.visibility = isContentVisible ? '' : 'hidden';
+                  cell.style.borderTop = cell.style.borderBottom = isContentVisible ? '' : '0';
+              }
+          });
+
+          // Mettre à jour les pourcentages après la modification de la visibilité
+          updatePlaquePercentage();
+          updateSaignementPercentage();
+
+          adjustVerticalBorders(table);
+      }
+  }
 }
-}
+
 
 // Fonction pour ajuster les bords verticaux entre les colonnes sélectionnées
 function adjustVerticalBorders(table, cellIndex) {
@@ -477,78 +485,84 @@ return null;
 
 // Fonction pour trouver le premier champ de saisie visible dans le tableau suivant
 function findFirstVisibleInputInNextTable(currentTableIndex, targetRowIndex) {
-const nextTableIndex = getNextTableIndex(currentTableIndex);
-const nextTableContainer = document.getElementById(tableContainers[nextTableIndex]);
-let nextInput = nextTableContainer.querySelector(`tr:nth-child(${targetRowIndex + 1}) td input[type="text"]:not([style*="visibility: hidden"])`);
-if (!nextInput) {
-  nextInput = nextTableContainer.querySelector('tr td input[type="text"]:not([style*="visibility: hidden"])');
-}
-return nextInput;
+  const nextTableIndex = getNextTableIndex(currentTableIndex);
+  const nextTableContainer = document.getElementById(tableContainers[nextTableIndex]);
+  
+  // Recherche du premier champ visible dans la ligne spécifiée
+  let nextInput = nextTableContainer.querySelector(
+      `tr:nth-child(${targetRowIndex + 1}) td input[type="text"]:not([style*="visibility: hidden"]), 
+       tr:nth-child(${targetRowIndex + 1}) td input[type="text"]:not([hidden])`
+  );
+
+  // Si aucun champ n'est trouvé dans la ligne, recherche dans l'ensemble du tableau
+  if (!nextInput) {
+      nextInput = nextTableContainer.querySelector(
+          'tr td input[type="text"]:not([style*="visibility: hidden"]), tr td input[type="text"]:not([hidden])'
+      );
+  }
+  return nextInput;
 }
 
-// Ajoutez cette fonction pour calculer le pourcentage de plaque
-function calculatePlaquePercentage() {
-const plaqueCheckboxes = document.querySelectorAll('.custom-checkbox2');
-const totalPlaqueCheckboxes = plaqueCheckboxes.length;
-const checkedPlaqueCheckboxes = Array.from(plaqueCheckboxes).filter(checkbox => checkbox.checked).length;
+// Fonction mise à jour pour calculer et afficher le pourcentage de plaque
+function calculateAndDisplayPlaquePercentage() {
+  const plaqueCheckboxes = document.querySelectorAll('.custom-checkbox2');
+  const visiblePlaqueCheckboxes = Array.from(plaqueCheckboxes).filter(checkbox => {
+      return getComputedStyle(checkbox.closest('td')).visibility !== 'hidden';
+  });
+  const checkedPlaqueCheckboxes = visiblePlaqueCheckboxes.filter(checkbox => checkbox.checked).length;
+  const percentage = (checkedPlaqueCheckboxes / visiblePlaqueCheckboxes.length) * 100;
 
-const percentage = (checkedPlaqueCheckboxes / totalPlaqueCheckboxes) * 100;
-return percentage.toFixed(2); // Retourne le pourcentage avec 2 décimales
+  return visiblePlaqueCheckboxes.length ? percentage.toFixed(2) : '0.00';
 }
 
-// Mettez à jour le pourcentage de plaque dans le DOM et remplissez la barre de progression
 function updatePlaquePercentage() {
-const percentage = calculatePlaquePercentage();
-document.getElementById('plaque-percentage').textContent = `${percentage}%`;
-
-const plaqueBar = document.getElementById('plaque-bar');
-plaqueBar.style.width = `${percentage}%`; // Ajuste la largeur de la barre en fonction du pourcentage
-plaqueBar.setAttribute('aria-valuenow', percentage);
+  const percentage = calculateAndDisplayPlaquePercentage();
+  document.getElementById('plaque-percentage').textContent = `${percentage}%`;
+  const plaqueBar = document.getElementById('plaque-bar');
+  plaqueBar.style.width = `${percentage}%`;
+  plaqueBar.setAttribute('aria-valuenow', percentage);
 }
 
-// Appelez updatePlaquePercentage chaque fois qu'une case à cocher "Plaque" est cochée ou décochée
+// Écoute des changements pour mettre à jour le pourcentage de plaque
 document.addEventListener('change', function(event) {
-if (event.target.classList.contains('custom-checkbox2')) {
-  updatePlaquePercentage();
-}
+  if (event.target.classList.contains('custom-checkbox2')) {
+      updatePlaquePercentage();
+  }
 });
 
-// Appelez cette fonction initialement pour définir le pourcentage correct au chargement de la page
-document.addEventListener('DOMContentLoaded', function() {
-updatePlaquePercentage();
-});
+// Calcul initial du pourcentage de plaque au chargement
+document.addEventListener('DOMContentLoaded', updatePlaquePercentage);
 
-// Fonction pour calculer le pourcentage de cases cochées pour la ligne "Saignement"
-function calculateSaignementPercentage() {
-const saignementCheckboxes = document.querySelectorAll('.custom-checkbox3');
-const totalSaignementCheckboxes = saignementCheckboxes.length;
-const checkedSaignementCheckboxes = Array.from(saignementCheckboxes).filter(checkbox => checkbox.checked).length;
+// Fonction pour calculer et afficher le pourcentage de saignement
+function calculateAndDisplaySaignementPercentage() {
+  const saignementCheckboxes = document.querySelectorAll('.custom-checkbox3');
+  const visibleSaignementCheckboxes = Array.from(saignementCheckboxes).filter(checkbox => {
+      return getComputedStyle(checkbox.closest('td')).visibility !== 'hidden';
+  });
+  const checkedSaignementCheckboxes = visibleSaignementCheckboxes.filter(checkbox => checkbox.checked).length;
+  const percentage = (checkedSaignementCheckboxes / visibleSaignementCheckboxes.length) * 100;
 
-const percentage = (checkedSaignementCheckboxes / totalSaignementCheckboxes) * 100;
-return percentage.toFixed(2); // Retourne le pourcentage avec 2 décimales
+  return visibleSaignementCheckboxes.length ? percentage.toFixed(2) : '0.00';
 }
 
-// Mettez à jour le pourcentage de saignement dans le DOM et remplissez la barre de progression
 function updateSaignementPercentage() {
-const percentage = calculateSaignementPercentage();
-document.getElementById('saignement-percentage').textContent = `${percentage}%`;
-
-const saignementBar = document.getElementById('saignement-bar');
-saignementBar.style.width = `${percentage}%`; // Ajuste la largeur de la barre en fonction du pourcentage
-saignementBar.setAttribute('aria-valuenow', percentage);
+  const percentage = calculateAndDisplaySaignementPercentage();
+  document.getElementById('saignement-percentage').textContent = `${percentage}%`;
+  const saignementBar = document.getElementById('saignement-bar');
+  saignementBar.style.width = `${percentage}%`;
+  saignementBar.setAttribute('aria-valuenow', percentage);
 }
 
-// Appelez updateSaignementPercentage chaque fois qu'une case à cocher "Saignement" est cochée ou décochée
+// Écoute des changements pour mettre à jour le pourcentage de saignement
 document.addEventListener('change', function(event) {
-if (event.target.classList.contains('custom-checkbox3')) {
-  updateSaignementPercentage();
-}
+  if (event.target.classList.contains('custom-checkbox3')) {
+      updateSaignementPercentage();
+  }
 });
 
-// Appelez cette fonction initialement pour définir le pourcentage correct au chargement de la page
-document.addEventListener('DOMContentLoaded', function() {
-updateSaignementPercentage();
-});
+// Calcul initial du pourcentage de saignement au chargement
+document.addEventListener('DOMContentLoaded', updateSaignementPercentage);
+
 
 
 // Fonction pour créer des champs de texte avec gestion des événements de navigation

@@ -206,14 +206,15 @@
                           <div class="carousel-inner h-100">
                             <div class="carousel-item h-100 active" data-bs-interval="10000">
                               <img src="Charting1.png" class="d-block w-100" alt="Image slide 1">
-                              <div class="carousel-caption d-block" style="color: black; background-color: rgba(245, 245, 245, 0.753); border: 2mm ridge rgba(0, 0, 0, 0.637);">
+                              <div class="carousel-caption d-block" style="color: black; background-color: rgba(245, 245, 245, 0.201);  backdrop-filter: blur(8px); height: 30%; ">
                                 <h5>Qu'est-ce que c'est ?</h5>
-                                <p>Le sondage parodontal permet d'évaluer l'état de santé des tissus de soutien de la dent en mesurant la perte d'attache des tissus parodontaux.</p>
-                            </div>
+                                <p>Le sondage parodontal permet d'évaluer l'état de santé des tissus de soutien<br /> 
+                                 de la dent en mesurant la perte d'attache des tissus parodontaux.</p>
+                              </div>
                             </div>
                             <div class="carousel-item h-100" data-bs-interval="2000">
                               <img src="Charting2.png" class="d-block w-100" alt="Image slide 2">
-                            <div class="carousel-caption d-block" style="color: black; background-color: rgba(245, 245, 245, 0.753); border: 2mm ridge rgba(0, 0, 0, 0.637);">
+                            <div class="carousel-caption d-block" style="color: black; background-color: rgba(245, 245, 245, 0.212);  backdrop-filter: blur(8px); padding: 1rem; ">
                                 <h5>Comment ?</h5>
                                 <p>Le sondage se réalise en vision directe, avec un bon éclairage et la lecture se fait perpendiculairement à la graduation.</p>
                                 <p>Le point de référence est important et la pression doit être constante afin d'éviter les variations intra-opérateur.</p>
@@ -222,18 +223,18 @@
                             </div>
                             <div class="carousel-item h-100" data-bs-interval="2000">
                               <img src="smile.png" class="d-block w-100" alt="Image slide 2">
-                            <div class="carousel-caption d-block" style="color: black; background-color: rgba(245, 245, 245, 0.753); border: 2mm ridge rgba(0, 0, 0, 0.637);">
+                            <div class="carousel-caption d-block" style="color: black; background-color: rgba(245, 245, 245, 0.196);  backdrop-filter: blur(8px); padding: 1rem; ">
                                 <p>On compte 6 sites de sondage pour chaque dent :<br /> 
                                     en mésial, en distal et au centre des faces lingual/palatine et vestibulaire. </p>
                                 <p>Il y a 2 mesures pour chaque site : le niveau gingival* et la profondeur de sondage**.</p>
                             </div>
-                            
-                            <div class="carousel-caption d-block" style="color: rgb(0, 0, 0); text-align: start; font-size: xx-small; top: 85%; left: 16%;">
-                                <p>*distance entre la jonction email-cément et le sommet de la gencive marginale.</p>
+
+                            <div class="carousel-caption d-block" style="color: rgb(0, 0, 0); text-align: start; font-size: xx-small; top: 70%; left: 52%;">
+                                <p1>*distance entre la jonction email-cément et le sommet de la gencive marginale.</p1>
                             </div>
                             
-                            <div class="carousel-caption d-block" style="color: rgb(0, 0, 0); text-align: start; font-size: xx-small; top: 85%; left: 59%;">
-                                <p>**distance entre le sommet de la gencive marginale et le fond de la poche.</p>
+                            <div class="carousel-caption d-block" style="color: rgb(0, 0, 0); text-align: start; font-size: xx-small; top: 72%; left: 52%;">
+                                <p1>**distance entre le sommet de la gencive marginale et le fond de la poche.</p1>
                             </div>
                             
                           </div>
@@ -310,51 +311,98 @@
                     </div>
                   </div>
                 </div>
-                <!--Troisième item-->
+
+                <!-- Troisième item -->
+                <!-- Bouton unique qui ouvre à la fois l'offcanvas et la modale -->
                 <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
                   <div class="card">
                     <img src="Assist3.png" class="card-img-top" alt="...">
                     <div class="card-body">
                       <h5 class="card-title">Assistance vocale</h5>
                       <p class="card-text">Comment utiliser l'assistance vocale en ligne ?</p>
-                      <a class="btn" data-bs-toggle="offcanvas" data-bs-target="#infoProjet3"
-                        aria-controls="infoProjet3" style = "background-color : #eff0ff">En savoir plus</a>
+                      <button id="btnOpenBoth" class="btn" style="background-color: #eff0ff;">En savoir plus</button>
                     </div>
-                    <!--Pseudo onglet-->
-                    <div class="offcanvas offcanvas-bottom h-100" tabindex="-1" id="infoProjet3"
-                        aria-labelledby="titelProjet3">
-                      <div class="offcanvas-header">
-                        <h5 class="offcanvas-title" id="titelProjet1">Assistance Vocale</h5>
-                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
-                                aria-label="Close"></button>
+                  </div>
+                </div>
+
+                <!-- Pseudo onglet modale pour le troisième item -->
+                <div class="modal fade" id="fenetreAssistanceVocale" tabindex="-1" aria-labelledby="fenetreAssistanceVocaleLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="fenetreAssistanceVocaleLabel">Prérequis</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
-                      <div class="offcanvas-body">
-                        <!-- Carousel -->
-                        <div id="carouselProject3" class="carousel slide shadow h-100" data-bs-ride="carousel"
-                            data-bs-touch="true">
-                          <div class="carousel-inner h-100">
-                            <div class="carousel-item h-100 active" data-bs-interval="10000">
-                              <img src="AV1.PNG" class="d-block w-100" alt="Image slide 1">
-                            </div>
-                            <div class="carousel-item h-100">
-                              <img src="AV4.PNG" class="d-block w-100" alt="Image slide 3">
-                            </div>
-                          </div>
-                          <!--Boutons de défilement-->
-                          <button class="carousel-control-prev" type="button" data-bs-target="#carouselProject3"
-                                  data-bs-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Previous</span>
-                          </button>
-                          <button class="carousel-control-next" type="button" data-bs-target="#carouselProject3"
-                                  data-bs-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="visually-hidden">Next</span>
-                          </button>
-                        </div>
+                      <div class="modal-body">
+                        <p><strong>1. Désactivation des extensions bloqueurs de publicités</strong></p>
+                        <p>Pour garantir le bon fonctionnement du site, veuillez désactiver toutes les extensions de type bloqueur de publicités avant d'accéder à l'assistance vocale.</p>
+                        </br>
+                        
+                        <p><strong>2. Préparation de votre microphone</strong></p>
+                        <p>Avant d'ouvrir la page de l'assistance vocale, assurez-vous que votre microphone est correctement branché. Lors de l'ouverture de la page, vous devrez autoriser l'utilisation du microphone pour permettre la reconnaissance vocale.</p>
+                        </br>
+                        
+                        <p><strong>3. Réglage du volume de la sortie audio</strong></p>
+                        <p>Pour éviter les interférences ou erreurs de transmission de données, configurez votre sortie audio à un volume bas. Un volume trop élevé peut provoquer des erreurs lors de la retranscription par l'assistance vocale.</p>
+                        </br>
+                        
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <!-- Pseudo onglet offcanvas -->
+                <div class="offcanvas offcanvas-bottom h-100" tabindex="-1" id="infoProjet3" aria-labelledby="titelProjet3">
+                  <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="titelProjet3">Assistance Vocale</h5>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                  </div>
+                  <div class="offcanvas-body">
+                    <!-- Carousel -->
+                    <div id="carouselProject3" class="carousel slide shadow h-100" data-bs-ride="carousel" data-bs-touch="true">
+                      <div class="carousel-inner h-100">
+                        <div class="carousel-item h-100 active" data-bs-interval="10000">
+                          <img src="AV1.PNG" class="d-block w-100" alt="Image slide 1">
+                        </div>
+                        <div class="carousel-item h-100">
+                          <img src="AV3.PNG" class="d-block w-100" alt="Image slide 3">
+                        </div>
+                        <div class="carousel-item h-100">
+                          <img src="AV4.PNG" class="d-block w-100" alt="Image slide 3">
+                        </div>
+                      </div>
+                      <!-- Boutons de défilement -->
+                      <button class="carousel-control-prev" type="button" data-bs-target="#carouselProject3" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                      </button>
+                      <button class="carousel-control-next" type="button" data-bs-target="#carouselProject3" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Script pour ouvrir l'offcanvas et la modale -->
+                <script>
+                  document.addEventListener('DOMContentLoaded', function() {
+                    const btnOpenBoth = document.getElementById('btnOpenBoth');
+                    const offcanvas = new bootstrap.Offcanvas(document.getElementById('infoProjet3'));
+                    const modal = new bootstrap.Modal(document.getElementById('fenetreAssistanceVocale'));
+
+                    btnOpenBoth.addEventListener('click', function() {
+                      // Ouvrir l'offcanvas
+                      offcanvas.show();
+
+                      // Délai pour ouvrir la modale après l'offcanvas
+                      setTimeout(() => {
+                        modal.show();
+                      }, 500); // Ajustez le délai selon vos besoins
+                    });
+                  });
+                </script>
+
                 </div>
               </div>
             </div>
@@ -399,35 +447,44 @@
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                      <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam tellus leo, volutpat vitae
-                        mi
-                        ultrices,
-                        sollicitudin
-                        blandit dui. Mauris ultricies iaculis leo id consequat. Class aptent taciti sociosqu ad
-                        litora
-                        torquent
-                        per conubia
-                        nostra, per inceptos himenaeos. Sed posuere risus viverra ornare porttitor. Nullam egestas
-                        nec
-                        libero eget
-                        sagittis.
-                        Phasellus vulputate ante a vulputate vehicula. Suspendisse nec dolor ante.
-                      </p>
-                      <p>
-                        Nunc auctor semper turpis. Duis quam velit, aliquam ut mi vel, sollicitudin dapibus erat.
-                        Etiam
-                        vitae
-                        malesuada urna.
-                        Vestibulum scelerisque lacus at molestie cursus. Donec placerat enim id enim feugiat
-                        gravida.
-                        Integer ut
-                        maximus libero.
-                        Nulla faucibus dolor vitae varius rutrum. Nunc neque sem, convallis id lorem quis, vulputate
-                        imperdiet
-                        eros. Donec
-                        viverra commodo congue.
-                      </p>
+                      <p><strong>1. Éditeur du Site</strong></p>
+                      <p>Le site web <em>charting-vocal.com</em> est édité par <em>Léo Hospital</em>, en tant que personne physique.</p>
+                      <p>Adresse e-mail : <em>Leo.HOSPITAL@etu.uca.fr</p>
+                      </br>
+                      
+                      <p><strong>2. Directeur de la publication</strong></p>
+                      <p>Le directeur de la publication répond au nom de <em>L. Hospital</em>.</p>
+                      </br>
+                      
+                      <p><strong>3. Hébergement du Site</strong></p>
+                      <p>Le site est hébergé par <em>Amazon Web Services, Inc.</em>, situé à <em>410 Terry Avenue North, Seattle, WA 98109-5210, USA</em>.<br>
+                      Téléphone : <em>+1 206-266-4064</em><br>
+                      Site web : <em><a href="https://aws.amazon.com/">https://aws.amazon.com/</a></em></p>
+                      </br>                      
+                      
+                      <p><strong>4. Propriété Intellectuelle</strong></p>
+                      <p>Tous les éléments présents sur ce site, y compris les textes, images, scripts JavaScript, et fichiers de style, sont protégés par les droits d'auteur et demeurent la propriété exclusive de <em>M.Hospital</em> ou de leurs auteurs respectifs. Toute reproduction, représentation, modification, publication, ou adaptation de tout ou partie des éléments du site, quel que soit le moyen ou le procédé utilisé, est interdite, sauf autorisation écrite préalable de <em>M.Hospital</em>.</p>
+                      </br>
+                      
+                      <p><strong>5. Utilisation des Données Personnelles</strong></p>
+                      <p>Le site respecte la réglementation française et européenne sur la protection des données personnelles (RGPD). Les données collectées via le formulaire de contact ou tout autre moyen ne seront pas partagées sans consentement et serviront uniquement à améliorer l'expérience utilisateur et répondre aux demandes des utilisateurs.</p>
+                      </br>
+                      
+                      <p><strong>6. Cookies</strong></p>
+                      <p>Le site utilise des cookies pour améliorer la navigation et proposer des contenus personnalisés. L'utilisateur peut paramétrer ses préférences et refuser les cookies via les paramètres de son navigateur.</p>
+                      </br>
+                      
+                      <p><strong>7. Responsabilité</strong></p>
+                      <p><em>M.Hospital</em> décline toute responsabilité quant à l’utilisation qui pourrait être faite des informations présentes sur le site, et des éventuelles erreurs ou omissions qu’il pourrait contenir.</p>
+                      </br>
+                      
+                      <p><strong>8. Loi Applicable</strong></p>
+                      <p>Les présentes mentions légales sont soumises au droit français. En cas de litige, et à défaut de solution amiable, les tribunaux français seront seuls compétents.</p>
+                      </br>
+                      
+                      <p><strong>9. Contact</strong></p>
+                      <p>Pour toute question concernant les mentions légales du site, veuillez contacter : <em>Leo.HOSPITAL@etu.uca.fr</em>.</p>
+                      </br>                      
                     </div>
                   </div>
                 </div>
