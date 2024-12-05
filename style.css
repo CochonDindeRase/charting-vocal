@@ -2559,6 +2559,49 @@ input[type="text"]:focus {
 
 
 
+/* Style du bouton principal */
+.vocale-link {
+  display: inline-block;
+  text-decoration: none; /* Pas de soulignement */
+  margin: 20px auto;
+}
+
+.vocale-button {
+  background-color: rgb(43, 0, 112); /* Couleur de fond existante */
+  color: #ffffff; /* Texte en blanc comme avant */
+  font-size: 18px; /* Taille du texte */
+  font-weight: bold;
+  text-align: center;
+  padding: 12px 24px; /* Espacement interne */
+  border-radius: 8px; /* Coins arrondis */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Ombre subtile */
+  border: none; /* Pas de bordure */
+  transition: all 0.3s ease-in-out; /* Animation sur le survol */
+  cursor: pointer;
+}
+
+/* Effet au survol */
+.vocale-button:hover {
+  background-color: rgb(33, 0, 92); /* Fond légèrement plus foncé au survol */
+  color: #f0f0f0; /* Texte légèrement plus clair au survol */
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2); /* Ombre amplifiée */
+  transform: translateY(-2px); /* Soulèvement */
+}
+
+/* Effet au clic */
+.vocale-button:active {
+  background-color: rgb(23, 0, 72); /* Fond plus foncé au clic */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Ombre réduite */
+  transform: translateY(0); /* Réinitialisation du soulèvement */
+}
+
+/* Style de l'icône dans le bouton */
+.vocale-icon {
+  margin-left: 10px; /* Espacement entre le texte et l'icône */
+  width: 30px; /* Largeur de l'icône */
+  height: 40px; /* Hauteur de l'icône */
+  vertical-align: middle; /* Aligne l'icône avec le texte */
+}
 
 
 
