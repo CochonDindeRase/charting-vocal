@@ -2488,41 +2488,6 @@ input[type="text"]:focus {
 
 
 
-    /* Supprime le style natif des menus déroulants */
-select {
-    -webkit-appearance: none; /* Désactiver le style natif sur Safari */
-    -moz-appearance: none; /* Désactiver le style natif sur Firefox */
-    appearance: none; /* Désactiver le style natif sur tous les navigateurs */
-    text-align: center; /* Centrer le texte */
-    color: black; /* Couleur du texte */
-    padding: 0.5em; /* Ajuster le padding */
-    font-size: 1em; /* Taille uniforme */
-    background: white; /* Fond blanc */
-    border: 1px solid #ccc; /* Ajout d'une bordure */
-    border-radius: 4px; /* Coins arrondis */
-}
-
-/* Ajouter un triangle pour imiter le style PC */
-select::after {
-    content: '▼'; /* Icône de triangle */
-    font-size: 0.75em;
-    position: absolute;
-    right: 1em;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none; /* Éviter les interactions avec l'icône */
-}
-
-/* Conteneur pour positionner correctement l'icône */
-select {
-    position: relative;
-    width: 100%; /* Remplir toute la cellule */
-    text-align-last: center; /* Centrer le texte */
-}
-
-
-
-
 
 
 
