@@ -699,25 +699,56 @@ for (let i = 0; i < tableData.length; i++) {
           else if (rowData.includes('Furcation') && rowData[j] !== 'Furcation') {
             const dropdown = createDropdown(['1', '2', '3']);
             dropdown.classList.add('custom-dropdown'); // classe des menus déroulants all (pour le CSS)
+
+            // Créez un conteneur pour inclure l'icône et la liste déroulante
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('dropdown-wrapper'); // Classe pour styler le conteneur
+
+            // Ajoutez l'icône dans le conteneur
+            const icon = document.createElement('span');
+            icon.classList.add('dropdown-icon'); // Classe pour styler l'icône
+
+            // Ajoutez la liste déroulante et l'icône dans le conteneur
+            wrapper.appendChild(dropdown);
+            wrapper.appendChild(icon);
+
+            // Ajoutez le conteneur à la cellule
+            cell.appendChild(wrapper);
+
             // Ajoutez un gestionnaire d'événements pour mettre à jour les données lorsque la valeur de la liste déroulante est modifiée
             dropdown.addEventListener('change', function () {
               updateData(i, j, dropdown.value);
             });
-            cell.appendChild(dropdown);
           }
+
           // Ajoutez une liste déroulante pour chaque cellule de la ligne contenant "Mobilité"
           else if (rowData.includes('Mobilité') && rowData[j] !== 'Mobilité') {
             const dropdown = createDropdown(['0', '1', '2', '3']);
             dropdown.classList.add('custom-dropdown'); // classe des menus déroulants all (pour le CSS)
+
+            // Créez un conteneur pour inclure l'icône et la liste déroulante
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('dropdown-wrapper'); // Classe pour styler le conteneur
+
+            // Ajoutez l'icône dans le conteneur
+            const icon = document.createElement('span');
+            icon.classList.add('dropdown-icon'); // Classe pour styler l'icône
+
+            // Ajoutez la liste déroulante et l'icône dans le conteneur
+            wrapper.appendChild(dropdown);
+            wrapper.appendChild(icon);
+
+            // Ajoutez le conteneur à la cellule
+            cell.appendChild(wrapper);
+
             // Ajoutez un gestionnaire d'événements pour mettre à jour les données lorsque la valeur de la liste déroulante est modifiée
             dropdown.addEventListener('change', function () {
               updateData(i, j, dropdown.value);
             });
-            cell.appendChild(dropdown);
           }
-    
-    
-              
+          
+          
+                    
           // Ajoutez des plages de valeurs pour chaque cellule de la ligne contenant "Niveau Gingival"
           else if (rowData.includes('Niveau Gingival') && rowData[j] !== 'Niveau Gingival') {
             const textInputs = createTextInputs(3, dentNumber, 'niveau', i, tableIndex);

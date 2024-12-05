@@ -1044,3 +1044,37 @@ input[type="text"]:focus {
   padding: 0; /* Supprime l'espace intérieur */
   box-sizing: border-box; /* Inclut les bordures dans la taille totale */
 }
+
+
+
+
+/* Conteneur du menu déroulant et de l'icône */
+.dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%; /* Adapte la largeur au parent */
+}
+
+/* Style du menu déroulant */
+.custom-dropdown {
+  -webkit-appearance: none; /* Supprime le style natif */
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%; /* Remplit la largeur du conteneur */
+  font-size: 1em;
+  color: black;
+  padding-right: 2em; /* Ajoute de l’espace pour l’icône */
+}
+
+/* Icône à droite */
+.dropdown-icon {
+  position: absolute;
+  top: 50%;
+  right: 5px; /* Distance depuis le bord droit */
+  transform: translateY(-50%);
+  width: 12px; /* Taille de l'icône */
+  height: 10px; /* Taille de l'icône */
+  background: url('./iconemenuderoulant.png') no-repeat center center; /* Icône */
+  background-size: contain; /* Ajuste la taille */
+  pointer-events: none; /* Ne bloque pas les interactions */
+}
