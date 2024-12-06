@@ -1510,22 +1510,27 @@ function hideLoading() {
             }
 
 
+                // Fonction pour jouer un son de bip
+                function playBipSound() {
+                  const audio = new Audio('./bip.mp3'); // Assurez-vous que le fichier bip.mp3 est dans le bon répertoire
+                  audio.play().catch((err) => {
+                      console.error("Erreur lors de la lecture du bip:", err);
+                  });
+                }
 
                 // Prononcer la valeur
                 function speakValue(value) {
-                    console.log("Prononciation de la valeur:", value);
-                    const utterance = new SpeechSynthesisUtterance(value);
-                    utterance.lang = 'fr-FR';
-                    speechSynthesis.speak(utterance);
-                }
+                console.log("Bip pour la valeur:", value);
+                playBipSound();
+              }
 
                 // Prononcer la commande
                 function speakCommand(command) {
-                    console.log("Prononciation de la commande:", command);
-                    const utterance = new SpeechSynthesisUtterance(command);
-                    utterance.lang = 'fr-FR';
-                    speechSynthesis.speak(utterance);
-                }
+                console.log("Bip pour la commande:", command);
+                playBipSound();
+              }
+
+
 
                 // Déplacer le focus vers le champ précédent
                 function focusPreviousInput() {
