@@ -1112,7 +1112,7 @@ async function generateAndSavePDF(autoPrint) {
     const pdf = new jsPDF('p', 'mm', 'a4');
     
     // Ajuster légèrement la taille du PDF pour bien ajuster le contenu
-    const pdfWidth = pdf.internal.pageSize.getWidth() * 1.4;
+    const pdfWidth = pdf.internal.pageSize.getWidth() * 1;
     const pdfHeight = pdf.internal.pageSize.getHeight() * 1.4;
 
     // Proportionner correctement l'image pour le PDF
@@ -1162,7 +1162,7 @@ document.querySelector('.telechargement-btn').addEventListener('click', function
       downloadButton.disabled = false;
       downloadButton.style.opacity = '1';
       // Ajoutez votre logique de téléchargement ici
-  }, 2000); // Ajustez selon la durée du téléchargement réel
+  }, 3000); // Ajustez selon la durée du téléchargement réel
 });
 
 document.querySelector('.imprimante-btn').addEventListener('click', function() {
@@ -1180,7 +1180,7 @@ document.querySelector('.imprimante-btn').addEventListener('click', function() {
       // Si votre fonction d'impression est gérée ailleurs et fonctionne déjà, ne faites rien ici
       // Simule simplement la fin du processus de chargement
       // Vous pouvez également inclure d'autres actions ici si nécessaire, comme la navigation ou une confirmation
-  }, 2000); // Ajustez le délai si nécessaire pour correspondre au temps réel d'impression ou de téléchargement.
+  }, 3000); // Ajustez le délai si nécessaire pour correspondre au temps réel d'impression ou de téléchargement.
 });
 
 
@@ -1249,86 +1249,76 @@ function hideLoading() {
                     }, { once: true });
                 }
 
-                // Fonction pour afficher le nouveau cercle de chargement
-                function showNewLoadingSpinner() {
-                    console.log("Affichage du nouveau cercle de chargement.");
-                    const spinner = document.getElementById('new-loading-spinner');
-                    if (spinner) {
-                        spinner.style.display = 'block'; // Afficher le spinner
+              // Fonction pour gérer l'affichage du cercle de chargement
+              function toggleLoadingSpinner(isVisible) {
+                const spinner = document.getElementById('new-loading-spinner');
+                if (spinner) {
+                    spinner.style.display = isVisible ? 'block' : 'none'; // Afficher ou masquer le spinner
+                }
+              }
+
+              // Démarrer la reconnaissance vocale
+              function startVoiceRecognition() {
+                const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
+                speechConfig.speechRecognitionLanguage = "fr-FR";
+                const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+                const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+                // Afficher le cercle dès qu'un son est détecté
+                recognizer.recognizing = (s, event) => {
+                    console.log('Son détecté, affichage du cercle de chargement.');
+                    toggleLoadingSpinner(true); // Afficher le cercle dès que du son est détecté
+                };
+
+                // Traiter les résultats de la reconnaissance
+                recognizer.recognized = (s, event) => {
+                    console.log('Texte reconnu:', event.result.text);
+                    if (isProcessingCommand) return; // Empêcher le traitement multiple
+                    const command = event.result.text.trim().toLowerCase();
+                    processVoiceCommand(command); // Traiter la commande
+                };
+
+                recognizer.onerror = (event) => {
+                    console.error('Erreur de reconnaissance vocale:', event.error);
+                    toggleLoadingSpinner(false); // Masquer le cercle en cas d'erreur
+                };
+
+                recognizer.onend = () => {
+                    console.log('Fin de la reconnaissance.');
+                    setTimeout(() => recognizer.start(), 50); // Redémarrer la reconnaissance
+                };
+
+                recognizer.startContinuousRecognitionAsync();
+              }
+
+              // Traiter les commandes vocales
+              function processVoiceCommand(command) {
+                console.log("Commande à traiter:", command);
+                isProcessingCommand = true;
+
+                // Normaliser la commande pour éviter les variations orthographiques
+                const normalizedCommand = normalizeCommand(command);
+
+                if (normalizedCommand.includes("retour")) {
+                    focusPreviousInput(); // Déplacement vers le champ précédent
+                } else if (normalizedCommand.includes("un") || normalizedCommand.includes("une")) {
+                    fillInputFields([1], normalizedCommand); // Remplir avec la valeur 1
+                } else if (normalizedCommand.includes("deux") || normalizedCommand.includes("de")) {
+                    fillInputFields([2], normalizedCommand); // Remplir avec la valeur 2
+                } else if (normalizedCommand.match(/saignement|plaque/)) {
+                    handleCheckboxCommand(normalizedCommand); // Traiter les cases à cocher
+                } else {
+                    const values = normalizedCommand.match(/\d+/g);
+                    if (values) {
+                        fillInputFields(values, normalizedCommand); // Remplir avec les valeurs
                     }
                 }
 
-                // Fonction pour masquer le nouveau cercle de chargement
-                function hideNewLoadingSpinner() {
-                    console.log("Masquage du nouveau cercle de chargement.");
-                    const spinner = document.getElementById('new-loading-spinner');
-                    if (spinner) {
-                        spinner.style.display = 'none'; // Masquer le spinner
-                    }
-                }
+                // Masquer le cercle après traitement
+                toggleLoadingSpinner(false); // Masquer le cercle
+                isProcessingCommand = false; // Libérer le verrou de commande
+              }
 
-                // Démarrer la reconnaissance vocale
-                function startVoiceRecognition() {
-                    const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(subscriptionKey, serviceRegion);
-                    speechConfig.speechRecognitionLanguage = "fr-FR";
-                    const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
-                    const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
-
-                    // Afficher le cercle dès que l'API détecte un son (avant la reconnaissance du texte)
-                    recognizer.recognizing = (s, event) => {
-                        console.log('Son détecté, affichage du cercle de chargement.');
-                        showNewLoadingSpinner(); // Afficher le cercle dès que du son est détecté
-                    };
-
-                    // Traiter les résultats de la reconnaissance
-                    recognizer.recognized = (s, event) => {
-                        console.log('Texte reconnu:', event.result.text);
-                        if (isProcessingCommand) return;
-                        const command = event.result.text.trim().toLowerCase();
-                        processVoiceCommand(command); // Traiter la commande
-                    };
-
-                    recognizer.onerror = (event) => {
-                        console.error('Erreur de reconnaissance vocale:', event.error);
-                        hideNewLoadingSpinner(); // Masquer le cercle en cas d'erreur
-                    };
-
-                    recognizer.onend = () => {
-                        hideNewLoadingSpinner(); // Masquer le cercle à la fin de la reconnaissance
-                        setTimeout(() => recognizer.start(), 50); // Redémarrer la reconnaissance
-                    };
-
-                    recognizer.startContinuousRecognitionAsync();
-                }
-
-                // Traiter les commandes vocales
-                function processVoiceCommand(command) {
-                    console.log("Commande à traiter:", command);
-                    isProcessingCommand = true;
-
-                    // Normaliser la commande pour éviter les variations orthographiques
-                    const normalizedCommand = normalizeCommand(command);
-
-                    if (normalizedCommand.includes("retour")) {
-                        focusPreviousInput();  // Déplacement vers le champ précédent
-                    } else if (normalizedCommand.includes("un") || normalizedCommand.includes("une")) {
-                        fillInputFields([1], normalizedCommand); // Passer la commande vocale
-                    } else if (normalizedCommand.includes("deux") || normalizedCommand.includes("de")) {
-                        fillInputFields([2], normalizedCommand); // Passer la commande vocale
-                    } else if (normalizedCommand.match(/saignement|plaque/)) {
-                        handleCheckboxCommand(normalizedCommand); // Traiter les cases à cocher
-                    } else {
-                        const values = normalizedCommand.match(/\d+/g);
-                        if (values) {
-                            fillInputFields(values, normalizedCommand); // Passer la commande vocale
-                        }
-                    }
-
-                    setTimeout(() => {
-                        hideNewLoadingSpinner(); // Masquer après traitement
-                        isProcessingCommand = false;
-                    }, 500); // Délai général pour masquer
-                }
 
             // Remplir les champs de saisie avec gestion des signes
             function fillInputFields(values, command) {
@@ -1358,10 +1348,6 @@ function hideLoading() {
                   }
           
                   simulateEnterKeyPress(activeElement); // Simuler "Enter" pour passer au champ suivant
-          
-                  setTimeout(() => {
-                      isVoiceCommand = false; // Désactiver après la fin de la commande vocale
-                  }, 500);
               }
           }
           
@@ -1462,18 +1448,18 @@ function hideLoading() {
                 console.log("Commande détectée pour case à cocher:", command);
 
                 const defaultPositionMap = {
-                    'mésio': 2, 'vestibulaire': 1, 'palatin': 1, 'disto': 0, 'distal': 0,
+                    'mésio': 2, 'vestibulaire': 1, 'palatin': 1, 'lingual': 1, 'disto': 0, 'distal': 0,
                     'mésial': 2, 'méziale': 2, 'métiale': 2, 'méssiale': 2, 'mézial': 2,
                     'métial': 2, 'méssial': 2
                 };
 
                 const modifiedPositionMap = {
-                    'mésio': 0, 'vestibulaire': 1, 'palatin': 1, 'disto': 2, 'distal': 2,
+                    'mésio': 0, 'vestibulaire': 1, 'palatin': 1, 'lingual': 1, 'disto': 2, 'distal': 2,
                     'mésial': 0, 'méziale': 0, 'métiale': 0, 'méssiale': 0, 'mézial': 0,
                     'métial': 0, 'méssial': 0
                 };
 
-                const positionIdentifiers = command.match(/mésio|vestibulaire|palatin|disto|distal|mésial|méziale|métiale|méssiale|mézial|métial|méssial/g);
+                const positionIdentifiers = command.match(/mésio|vestibulaire|palatin|lingual|disto|distal|mésial|méziale|métiale|méssiale|mézial|métial|méssial/g);
                 const rowIdentifier = command.match(/saignement|plaque/i);
 
                 if (positionIdentifiers && rowIdentifier) {
@@ -1497,13 +1483,13 @@ function hideLoading() {
 
                     // Utilisation d'un délai pour laisser le temps à l'assistant de continuer après la mise à jour
                     setTimeout(() => {
-                        if (rowIdentifier[0].toLowerCase() === "saignement") {
-                            updateSaignementPercentage2(); // Mettre à jour le pourcentage pour saignement
-                        } else if (rowIdentifier[0].toLowerCase() === "plaque") {
-                            updatePlaquePercentage2(); // Mettre à jour le pourcentage pour plaque
-                        }
-                    }, 100); // Petit délai pour éviter l'interruption
-
+                      if (rowIdentifier[0].toLowerCase() === "saignement") {
+                        updateSaignementPercentage2();
+                    } else if (rowIdentifier[0].toLowerCase() === "plaque") {
+                        updatePlaquePercentage2();
+                    }
+                  });
+                    
                     // Faire parler la commande après traitement
                     speakCommand(`${rowIdentifier} ${positionIdentifiers.join(' ')}`);
                 }
@@ -1640,3 +1626,5 @@ function hideLoading() {
 
 
 
+
+                
