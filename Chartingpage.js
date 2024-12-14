@@ -1295,12 +1295,16 @@ function hideLoading() {
               function processVoiceCommand(command) {
                 console.log("Commande à traiter:", command);
                 isProcessingCommand = true;
-
+            
                 // Normaliser la commande pour éviter les variations orthographiques
                 const normalizedCommand = normalizeCommand(command);
-
+            
                 if (normalizedCommand.includes("retour")) {
-                    focusPreviousInput(); // Déplacement vers le champ précédent
+                  focusPreviousInput(); // Déplacement vers le champ précédent
+                  playErrorSound(); // Jouer le bip après le déplacement
+              } else if (normalizedCommand.includes("suivant")) {
+                  moveToNextInput(); // Déplacement vers le champ suivant
+                  playErrorSound(); // Jouer le bip après le déplacement
                 } else if (normalizedCommand.includes("un") || normalizedCommand.includes("une")) {
                     fillInputFields([1], normalizedCommand); // Remplir avec la valeur 1
                 } else if (normalizedCommand.includes("deux") || normalizedCommand.includes("de")) {
@@ -1313,11 +1317,29 @@ function hideLoading() {
                         fillInputFields(values, normalizedCommand); // Remplir avec les valeurs
                     }
                 }
-
+            
                 // Masquer le cercle après traitement
                 toggleLoadingSpinner(false); // Masquer le cercle
                 isProcessingCommand = false; // Libérer le verrou de commande
+            }
+
+            //Passer au champ suivant
+            function moveToNextInput() {
+              const activeElement = document.activeElement;
+              if (activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text') {
+                  const nextInput = findNextVisibleInput(activeElement); // Trouve le prochain champ de saisie visible
+                  if (nextInput) {
+                      nextInput.focus();
+                      nextInput.select(); // Sélectionne le contenu du champ
+                  } else {
+                      console.log("Aucun champ suivant disponible.");
+                  }
+              } else {
+                  console.log("Aucun champ actif détecté.");
               }
+          }
+          
+            
 
 
             // Remplir les champs de saisie avec gestion des signes
@@ -1496,6 +1518,15 @@ function hideLoading() {
             }
 
 
+
+                // Fonction pour jouer un son de error
+                function playErrorSound() {
+                  const audio = new Audio('./error.mp3'); // Assurez-vous que le fichier bip.mp3 est dans le bon répertoire
+                  audio.play().catch((err) => {
+                      console.error("Erreur lors de la lecture du bip:", err);
+                  });
+                }
+
                 // Fonction pour jouer un son de bip
                 function playBipSound() {
                   const audio = new Audio('./bip.mp3'); // Assurez-vous que le fichier bip.mp3 est dans le bon répertoire
@@ -1503,6 +1534,7 @@ function hideLoading() {
                       console.error("Erreur lors de la lecture du bip:", err);
                   });
                 }
+
 
                 // Prononcer la valeur
                 function speakValue(value) {
