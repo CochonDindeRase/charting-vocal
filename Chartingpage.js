@@ -279,71 +279,110 @@ function createTable(containerId, tableData) {
 function attachClickHandlers() {
   // Attachez des gestionnaires d'événements aux containers de tableaux
   document.getElementById('table-container').addEventListener('click', function(event) {
-      handleTableCellClick(event, 'maxV-');
+    handleTableCellClick(event, 'maxV-', 'third-table-container', 'maxP-');
   });
-
-  document.getElementById('second-table-container').addEventListener('click', function(event) {
-      handleTableCellClick(event, 'mandV-');
-  });
-
+  
   document.getElementById('third-table-container').addEventListener('click', function(event) {
-      handleTableCellClick(event, 'maxP-');
+    handleTableCellClick(event, 'maxP-', 'table-container', 'maxV-');
   });
-
+  
+  document.getElementById('second-table-container').addEventListener('click', function(event) {
+    handleTableCellClick(event, 'mandV-', 'quatre-table-container', 'mandP-');
+  });
+  
   document.getElementById('quatre-table-container').addEventListener('click', function(event) {
-      handleTableCellClick(event, 'mandP-');
+    handleTableCellClick(event, 'mandP-', 'second-table-container', 'mandV-');
   });
-}
-
-function handleTableCellClick(event, prefix) {
-  const targetCell = event.target.closest('td, th');
-
-  if (!targetCell) {
-      console.warn("Aucune cellule valide détectée lors du clic.");
-      return;
   }
+  
+  // Fonction pour gérer les clics sur les cellules et synchroniser les actions avec un tableau lié
+  function handleTableCellClick(event, prefix, linkedTableId, linkedPrefix) {
+    if (event.target.tagName === 'TD' || event.target.tagName === 'TH') {
+        // Ignorer les cellules avec des éléments interactifs
+        if (event.target.querySelector('select, input')) {
+            return;
+        }
+  
+        const cellIndex = event.target.cellIndex; // Index réel (commence à 0)
+        const cellValue = event.target.innerText.trim();
+        if (!cellValue) return;
+  
+        const table = event.target.closest('table');
+        const isLastColumn = cellIndex === table.rows[0].cells.length - 1; // Vérifier si c'est la dernière colonne
+  
+        if (!isLastColumn) {
+            const imageId = `${prefix}img-${cellValue}`;
+            const imageElement = document.getElementById(imageId);
+  
+            // Masquage/affichage des images et des cellules
+            const cells = table.querySelectorAll(`tr td:nth-child(${cellIndex + 1}), tr th:nth-child(${cellIndex + 1})`);
+            let isContentVisible = event.target.dataset.contentVisible === 'true';
+  
+            cells.forEach(cell => {
+                if (cell === event.target) {
+                    // Texte barré pour la cellule cliquée
+                    cell.style.textDecoration = isContentVisible ? '' : 'line-through';
+                    cell.dataset.contentVisible = !isContentVisible;
+                    if (imageElement) imageElement.style.visibility = isContentVisible ? 'visible' : 'hidden';
+                } else {
+                    // Masquage pour les autres cellules
+                    cell.style.visibility = isContentVisible ? '' : 'hidden';
+                    cell.style.borderTop = cell.style.borderBottom = isContentVisible ? '' : '0';
+                }
+            });
+  
+            // Synchroniser avec le tableau lié
+            if (linkedTableId && linkedPrefix) {
+              const linkedTable = document.getElementById(linkedTableId);
+              if (linkedTable) {
+                  const linkedRows = Array.from(linkedTable.querySelectorAll('tr'));
+                  const linkedNumberRow = linkedRows[0]; // Première ligne (numéros de dents)
+                  const linkedCells = Array.from(linkedNumberRow.children);
+                  const linkedCellIndex = linkedCells.length - 2 - cellIndex; // Index inversé en ignorant la dernière cellule
 
-  // Ignorer les clics sur les cellules contenant des éléments interactifs
-  if (targetCell.querySelector('select, input, .custom-checkbox1, .custom-checkbox2, .custom-checkbox3')) {
-      return; // Ignore le clic si un élément interactif est trouvé dans la cellule
+                  if (linkedCellIndex >= 0 && linkedCellIndex < linkedCells.length) {
+                      const linkedCell = linkedCells[linkedCellIndex];
+
+                      // Masquage/affichage des cellules dans le tableau lié
+                      const linkedCellsToUpdate = linkedTable.querySelectorAll(`tr td:nth-child(${linkedCellIndex + 1}), tr th:nth-child(${linkedCellIndex + 1})`);
+                      const linkedImageId = `${linkedPrefix}img-${linkedCell.innerText.trim()}`;
+                      const linkedImageElement = document.getElementById(linkedImageId);
+
+                      linkedCellsToUpdate.forEach((cell, rowIndex) => {
+                          if (cell === linkedCell) {
+                              // Texte barré pour la cellule liée (première ligne)
+                              cell.style.textDecoration = isContentVisible ? '' : 'line-through';
+                              cell.dataset.contentVisible = !isContentVisible;
+                              cell.style.visibility = ''; // Toujours visible
+                          } else if (rowIndex === 0) {
+                              // La cellule numéro dans la première ligne reste visible et barrée
+                              cell.style.visibility = '';
+                              cell.style.textDecoration = isContentVisible ? '' : 'line-through';
+                              cell.dataset.contentVisible = !isContentVisible;
+                          } else {
+                              // Masquage pour les autres cellules de la colonne
+                              cell.style.visibility = isContentVisible ? '' : 'hidden';
+                              cell.style.borderTop = cell.style.borderBottom = isContentVisible ? '' : '0';
+                          }
+                      });
+
+                      if (linkedImageElement) {
+                          linkedImageElement.style.visibility = isContentVisible ? 'visible' : 'hidden';
+                      }
+                  }
+              }
+          }
+
+  
+  
+            // Mettre à jour les pourcentages après la modification de la visibilité
+            updatePlaquePercentage();
+            updateSaignementPercentage();
+  
+            adjustVerticalBorders(table);
+        }
+    }
   }
-
-  console.log("Cellule cliquée détectée :", targetCell);
-
-  const cellIndex = targetCell.cellIndex + 1; // +1 pour correspondre à l'index CSS
-  const cellValue = targetCell.innerText.trim();
-  if (!cellValue) {
-      console.warn("Aucune valeur dans la cellule cliquée :", targetCell);
-      return;
-  }
-
-  const imageId = `${prefix}img-${cellValue}`;
-  const imageElement = document.getElementById(imageId);
-
-  if (!imageElement) {
-      console.warn("Aucune image trouvée avec l'ID :", imageId);
-  }
-
-  const cells = targetCell.closest('table').querySelectorAll(`tr td:nth-child(${cellIndex}), tr th:nth-child(${cellIndex})`);
-  let isContentVisible = targetCell.dataset.contentVisible === 'true';
-
-  cells.forEach(cell => {
-      if (cell === targetCell) { // Cellule cliquée
-          cell.style.textDecoration = isContentVisible ? '' : 'line-through';
-          cell.dataset.contentVisible = !isContentVisible;
-          if (imageElement) imageElement.style.visibility = isContentVisible ? 'visible' : 'hidden';
-      } else { // Autres cellules de la colonne
-          cell.style.visibility = isContentVisible ? '' : 'hidden';
-          cell.style.borderTop = cell.style.borderBottom = isContentVisible ? '' : '0';
-      }
-  });
-
-  // Mettre à jour le nombre total de cases à cocher après le masquage/réaffichage
-  updateTotalCheckboxCounts();
-
-  // Ajuster les bords verticaux des cellules si nécessaire
-  adjustVerticalBorders(targetCell.closest('table'));
-}
 
 
 
@@ -384,7 +423,7 @@ attachClickHandlers(); // Assurez-vous que cette fonction est appelée une fois 
 
 
 
-// Fonction pour lier les cases à cocher aux images correspondantes et les remplacer par des images d'implants lors du clic
+// Fonction pour lier les cases à cocher aux images correspondantes et les remplacer par des images d'implants lors du clic 
 async function attachCheckboxImageReplacement() {
   // Définir les chemins des fichiers JSON pour chaque groupe d'images
   const jsonFiles = {
@@ -413,23 +452,58 @@ async function attachCheckboxImageReplacement() {
                   const implantImagePath = originalImagePath.replace("dents", "implants"); // Chemin de l'image d'implant
 
                   // Ajouter un écouteur d'événement pour basculer entre les images d'origine et d'implant
-                  checkbox.addEventListener("change", () => {
+                  const updateImages = () => {
                       const images = document.querySelectorAll(`img[src="${originalImagePath}"], img[src="${implantImagePath}"]`);
-                      
                       images.forEach((image) => {
                           image.src = checkbox.checked ? implantImagePath : originalImagePath;
                       });
-                  });
+                  };
+
+                  checkbox.addEventListener("change", updateImages);
+
+                  // Synchronisation avec les cases à cocher liées (indices inversés)
+                  const linkedCheckbox = findLinkedCheckbox(tableId, index, checkboxes.length);
+                  if (linkedCheckbox) {
+                      checkbox.addEventListener("change", () => {
+                          linkedCheckbox.checked = checkbox.checked;
+                          updateImages();
+                      });
+                      linkedCheckbox.addEventListener("change", () => {
+                          checkbox.checked = linkedCheckbox.checked;
+                          updateImages();
+                      });
+                  }
               }
           });
       }
   }
 }
 
+// Fonction pour trouver la checkbox implant liée avec inversion des indices
+function findLinkedCheckbox(currentTableId, index, totalCells) {
+    const linkedTableId = {
+        "table-container": "third-table-container",
+        "third-table-container": "table-container",
+        "second-table-container": "quatre-table-container",
+        "quatre-table-container": "second-table-container"
+    }[currentTableId];
+
+    if (linkedTableId) {
+        const linkedTable = document.getElementById(linkedTableId);
+        if (linkedTable) {
+            const linkedCheckboxes = linkedTable.querySelectorAll(".custom-checkbox1");
+            const invertedIndex = totalCells - 1 - index; // Calcul de l'index inversé
+            return linkedCheckboxes[invertedIndex] || null;
+        }
+    }
+    return null;
+}
+
 // Exécuter cette fonction après la création dynamique des tableaux et des cases à cocher
-document.addEventListener("DOMContentLoaded", () => {
-  attachCheckboxImageReplacement();
+document.addEventListener("DOMContentLoaded", async () => {
+  await attachCheckboxImageReplacement();
 });
+
 
 
 // Ajoutez les IDs des conteneurs de tableaux dans un ordre cyclique
@@ -531,6 +605,90 @@ if (event.target.classList.contains('custom-checkbox3')) {
 document.addEventListener('DOMContentLoaded', function() {
 updateSaignementPercentage();
 });
+
+// Fonction de synchronisation des cellules
+function synchronizeCells() {
+  const tableMappings = [
+      {
+          tables: ["#table-container", "#third-table-container"],
+          rowsToSync: {
+              "mobilité": 8, // Huitième ligne
+              "implant": 6  // Sixième ligne
+          }
+      },
+      {
+          tables: ["#second-table-container", "#quatre-table-container"],
+          rowsToSync: {
+              "mobilité": 8, // Huitième ligne
+              "implant": 6  // Sixième ligne
+          }
+      }
+  ];
+
+  tableMappings.forEach(mapping => {
+      const [tableId1, tableId2] = mapping.tables;
+      const rowsToSync = mapping.rowsToSync;
+
+      const table1 = document.querySelector(tableId1);
+      const table2 = document.querySelector(tableId2);
+
+      if (table1 && table2) {
+          const rows1 = table1.querySelectorAll("tr");
+          const rows2 = table2.querySelectorAll("tr");
+
+          Object.entries(rowsToSync).forEach(([label, rowIndex]) => {
+              const row1 = rows1[rowIndex];
+              const row2 = rows2[rowIndex];
+
+              if (row1 && row2) {
+                  const cells1 = row1.querySelectorAll("td, th"); // Inclure <th> et <td>
+                  const cells2 = row2.querySelectorAll("td, th");
+
+                  cells1.forEach((cell, index) => {
+                      if (index < cells1.length - 1) { // Ignore la dernière cellule (titre)
+                          if (label === "implant") {
+                              const checkbox1 = cell.querySelector("input[type='checkbox']");
+                              const checkbox2 = cells2[cells1.length - 2 - index]?.querySelector("input[type='checkbox']");
+
+                              if (checkbox1 && checkbox2) {
+                                  checkbox1.addEventListener("change", () => {
+                                      checkbox2.checked = checkbox1.checked;
+                                  });
+                                  checkbox2.addEventListener("change", () => {
+                                      checkbox1.checked = checkbox2.checked;
+                                  });
+                              }
+                          } else {
+                              const dropdown1 = cell.querySelector("select");
+                              const dropdown2 = cells2[cells1.length - 2 - index]?.querySelector("select");
+
+                              if (dropdown1 && dropdown2) {
+                                  // Ajout de journaux pour déboguer
+                                  console.log(`Synchronisation entre ${tableId1} et ${tableId2} pour la ligne ${label}, cellule ${index}`);
+                                  console.log("Dropdown1:", dropdown1, "Dropdown2:", dropdown2);
+
+                                  dropdown1.addEventListener("change", () => {
+                                      console.log(`Modification détectée dans ${tableId1}, ligne ${label}, cellule ${index}`);
+                                      dropdown2.value = dropdown1.value;
+                                  });
+                                  dropdown2.addEventListener("change", () => {
+                                      console.log(`Modification détectée dans ${tableId2}, ligne ${label}, cellule ${index}`);
+                                      dropdown1.value = dropdown2.value;
+                                  });
+                              }
+                          }
+                      }
+                  });
+              }
+          });
+      }
+  });
+}
+
+// Appeler la fonction de synchronisation lors du chargement du document
+document.addEventListener("DOMContentLoaded", synchronizeCells);
+
+
 
 
 // Fonction pour créer des champs de texte avec gestion des événements de navigation
