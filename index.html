@@ -564,9 +564,9 @@
           scrollContainer.style.border = 'none';
   
           const canvas = await html2canvas(chartingSection, {
-              scale: 2, // Augmente la qualité de l'image
-              useCORS: true, // Pour éviter les problèmes liés aux images provenant de domaines différents
-              logging: true // Active le logging pour le debug sur iOS
+              scale: 1.5, // Réduction de la résolution pour éviter les crashes iOS
+              useCORS: true, // Empêche les erreurs de cross-origin
+              backgroundColor: null // Évite un fond blanc forcé qui prend de la mémoire
           });
   
           // Restaurer les styles originaux
@@ -575,7 +575,7 @@
           scrollContainer.style.backgroundColor = originalScrollContainerBackgroundColor;
           scrollContainer.style.border = originalScrollContainerBorder;
   
-          const imgData = canvas.toDataURL('image/png');
+          const imgData = canvas.toDataURL('image/jpeg', 0.8); // Compression JPEG pour réduire la taille du fichier
           const pdf = new jsPDF('p', 'mm', 'a4');
           const pdfWidth = pdf.internal.pageSize.getWidth();
           const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -586,32 +586,33 @@
   
           if (imageHeight <= pdfHeight) {
               const xOffset = (pdfWidth - pdfWidth) / 2;
-              pdf.addImage(imgData, 'PNG', xOffset, 0, pdfWidth, imageHeight);
+              pdf.addImage(imgData, 'JPEG', xOffset, 0, pdfWidth, imageHeight);
           } else {
               const scale = pdfHeight / imageHeight;
               const scaledWidth = pdfWidth * scale;
               const scaledHeight = imageHeight * scale;
               const xOffset = (pdfWidth - scaledWidth) / 2;
   
-              pdf.addImage(imgData, 'PNG', xOffset, 0, scaledWidth, scaledHeight);
+              pdf.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, scaledHeight);
           }
   
           const pdfBlob = pdf.output('blob');
   
-          // Si autoPrint est vrai, ouvrir la boîte de dialogue d'impression
           if (autoPrint) {
-              const blobUrl = URL.createObjectURL(pdfBlob);
-              const printWindow = window.open(blobUrl, '_blank');
-              if (printWindow) {
-                  printWindow.onload = function () {
-                      printWindow.focus();
-                      printWindow.print();
-                  };
-              } else {
-                  console.error("Échec de l'ouverture de la fenêtre d'impression. Vérifiez les pop-ups bloqués.");
-              }
+              // Délai pour iOS (évite un crash sur impression)
+              setTimeout(() => {
+                  const blobUrl = URL.createObjectURL(pdfBlob);
+                  const printWindow = window.open(blobUrl, '_blank');
+                  if (printWindow) {
+                      printWindow.onload = function () {
+                          printWindow.focus();
+                          printWindow.print();
+                      };
+                  } else {
+                      console.error("Échec de l'ouverture de la fenêtre d'impression. Vérifiez les pop-ups bloqués.");
+                  }
+              }, 500); // Ajout d'un délai de 500ms pour stabiliser sur iOS
           } else {
-              // Création d'un lien temporaire pour télécharger le PDF (meilleure compatibilité sur iOS)
               const downloadLink = document.createElement("a");
               downloadLink.href = URL.createObjectURL(pdfBlob);
               downloadLink.download = "charting.pdf";
