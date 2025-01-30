@@ -542,6 +542,7 @@
       const chartingSection = document.querySelector('#Charting');
       const fondElement = chartingSection.querySelector('.fond');
       const scrollContainer = document.querySelector('.scroll-container');
+      const loadingOverlay = document.querySelector('.loading-overlay');
   
       if (!chartingSection) {
           console.error("La section #Charting n'a pas été trouvée.");
@@ -551,75 +552,92 @@
       const { jsPDF } = window.jspdf;
   
       try {
-          // Sauvegarder les styles originaux
-          const originalFondBackgroundColor = fondElement.style.backgroundColor;
-          const originalFondBorder = fondElement.style.border;
-          const originalScrollContainerBackgroundColor = scrollContainer.style.backgroundColor;
-          const originalScrollContainerBorder = scrollContainer.style.border;
-          
-          // Supprimer le fond et la bordure temporairement
-          fondElement.style.backgroundColor = 'transparent';
-          fondElement.style.border = 'none';
-          scrollContainer.style.backgroundColor = 'transparent';
-          scrollContainer.style.border = 'none';
+          // Afficher l'overlay de chargement avant la capture
+          if (loadingOverlay) loadingOverlay.style.display = 'flex';
   
-          const canvas = await html2canvas(chartingSection, {
-              scale: 1.5, // Réduction de la résolution pour éviter les crashes iOS
-              useCORS: true, // Empêche les erreurs de cross-origin
-              backgroundColor: null // Évite un fond blanc forcé qui prend de la mémoire
-          });
+          // Masquer l'overlay temporairement pour qu'il n'apparaisse pas dans la capture
+          setTimeout(async () => {
+              const originalOverlayDisplay = loadingOverlay.style.display;
+              loadingOverlay.style.display = 'none';
   
-          // Restaurer les styles originaux
-          fondElement.style.backgroundColor = originalFondBackgroundColor;
-          fondElement.style.border = originalFondBorder;
-          scrollContainer.style.backgroundColor = originalScrollContainerBackgroundColor;
-          scrollContainer.style.border = originalScrollContainerBorder;
+              // Sauvegarder les styles originaux
+              const originalFondBackgroundColor = fondElement.style.backgroundColor;
+              const originalFondBorder = fondElement.style.border;
+              const originalScrollContainerBackgroundColor = scrollContainer.style.backgroundColor;
+              const originalScrollContainerBorder = scrollContainer.style.border;
+              
+              // Supprimer le fond et la bordure temporairement
+              fondElement.style.backgroundColor = '#FFFFFF'; // Fond blanc pour éviter le noir
+              fondElement.style.border = 'none';
+              scrollContainer.style.backgroundColor = '#FFFFFF';
+              scrollContainer.style.border = 'none';
   
-          const imgData = canvas.toDataURL('image/jpeg', 0.8); // Compression JPEG pour réduire la taille du fichier
-          const pdf = new jsPDF('p', 'mm', 'a4');
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
+              const canvas = await html2canvas(chartingSection, {
+                  scale: 1.5, // Réduction de la résolution pour éviter les crashes iOS
+                  useCORS: true, // Empêche les erreurs de cross-origin
+                  backgroundColor: '#FFFFFF' // Assure un fond blanc
+              });
   
-          // Ajuster la hauteur de l'image pour qu'elle tienne sur une page
-          const imgProps = pdf.getImageProperties(imgData);
-          const imageHeight = (imgProps.height * pdfWidth) / imgProps.width;
+              // Restaurer l'overlay après la capture
+              loadingOverlay.style.display = originalOverlayDisplay;
   
-          if (imageHeight <= pdfHeight) {
-              const xOffset = (pdfWidth - pdfWidth) / 2;
-              pdf.addImage(imgData, 'JPEG', xOffset, 0, pdfWidth, imageHeight);
-          } else {
-              const scale = pdfHeight / imageHeight;
-              const scaledWidth = pdfWidth * scale;
-              const scaledHeight = imageHeight * scale;
-              const xOffset = (pdfWidth - scaledWidth) / 2;
+              // Restaurer les styles originaux
+              fondElement.style.backgroundColor = originalFondBackgroundColor;
+              fondElement.style.border = originalFondBorder;
+              scrollContainer.style.backgroundColor = originalScrollContainerBackgroundColor;
+              scrollContainer.style.border = originalScrollContainerBorder;
   
-              pdf.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, scaledHeight);
-          }
+              const imgData = canvas.toDataURL('image/jpeg', 0.8); // Compression JPEG pour réduire la taille du fichier
+              const pdf = new jsPDF('p', 'mm', 'a4');
+              const pdfWidth = pdf.internal.pageSize.getWidth();
+              const pdfHeight = pdf.internal.pageSize.getHeight();
   
-          const pdfBlob = pdf.output('blob');
+              // Ajuster la hauteur de l'image pour qu'elle tienne sur une page
+              const imgProps = pdf.getImageProperties(imgData);
+              const imageHeight = (imgProps.height * pdfWidth) / imgProps.width;
   
-          if (autoPrint) {
-              // Délai pour iOS (évite un crash sur impression)
+              if (imageHeight <= pdfHeight) {
+                  const xOffset = (pdfWidth - pdfWidth) / 2;
+                  pdf.addImage(imgData, 'JPEG', xOffset, 0, pdfWidth, imageHeight);
+              } else {
+                  const scale = pdfHeight / imageHeight;
+                  const scaledWidth = pdfWidth * scale;
+                  const scaledHeight = imageHeight * scale;
+                  const xOffset = (pdfWidth - scaledWidth) / 2;
+  
+                  pdf.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, scaledHeight);
+              }
+  
+              const pdfBlob = pdf.output('blob');
+  
+              if (autoPrint) {
+                  // Délai pour iOS (évite un crash sur impression)
+                  setTimeout(() => {
+                      const blobUrl = URL.createObjectURL(pdfBlob);
+                      const printWindow = window.open(blobUrl, '_blank');
+                      if (printWindow) {
+                          printWindow.onload = function () {
+                              printWindow.focus();
+                              printWindow.print();
+                          };
+                      } else {
+                          console.error("Échec de l'ouverture de la fenêtre d'impression. Vérifiez les pop-ups bloqués.");
+                      }
+                  }, 500); // Ajout d'un délai de 500ms pour stabiliser sur iOS
+              } else {
+                  const downloadLink = document.createElement("a");
+                  downloadLink.href = URL.createObjectURL(pdfBlob);
+                  downloadLink.download = "charting.pdf";
+                  document.body.appendChild(downloadLink);
+                  downloadLink.click();
+                  document.body.removeChild(downloadLink);
+              }
+  
+              // Masquer l'overlay après la génération du PDF
               setTimeout(() => {
-                  const blobUrl = URL.createObjectURL(pdfBlob);
-                  const printWindow = window.open(blobUrl, '_blank');
-                  if (printWindow) {
-                      printWindow.onload = function () {
-                          printWindow.focus();
-                          printWindow.print();
-                      };
-                  } else {
-                      console.error("Échec de l'ouverture de la fenêtre d'impression. Vérifiez les pop-ups bloqués.");
-                  }
-              }, 500); // Ajout d'un délai de 500ms pour stabiliser sur iOS
-          } else {
-              const downloadLink = document.createElement("a");
-              downloadLink.href = URL.createObjectURL(pdfBlob);
-              downloadLink.download = "charting.pdf";
-              document.body.appendChild(downloadLink);
-              downloadLink.click();
-              document.body.removeChild(downloadLink);
-          }
+                  if (loadingOverlay) loadingOverlay.style.display = 'none';
+              }, 1000);
+          }, 500); // Délai avant de masquer l'overlay pour qu'il soit visible au début
       } catch (error) {
           console.error("Erreur lors de la capture de la section:", error);
       }
