@@ -978,7 +978,7 @@ for (let i = 0; i < tableData.length; i++) {
             const textInputs = createTextInputs(3, dentNumber, 'profondeur', i, tableIndex);
           
             for (let k = 0; k < 3; k++) {
-              textInputs[k].value = '0';
+              textInputs[k].value = '1';
               textInputs[k].addEventListener('input', function () {
                 const enteredValue = textInputs[k].value.trim();
           
@@ -995,8 +995,8 @@ for (let i = 0; i < tableData.length; i++) {
 
                 } else {
                   // Si la valeur n'est pas un nombre, rétablissez la valeur par défaut
-                  textInputs[k].value = '0';
-                  updateData(i, j + k, '0');
+                  textInputs[k].value = '1';
+                  updateData(i, j + k, '1');
                 }
               });
           
