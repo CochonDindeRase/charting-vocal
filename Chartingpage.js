@@ -1449,37 +1449,419 @@ function hideLoading() {
                 recognizer.startContinuousRecognitionAsync();
               }
 
-              // Traiter les commandes vocales
-              function processVoiceCommand(command) {
-                console.log("Commande à traiter:", command);
-                isProcessingCommand = true;
-            
-                // Normaliser la commande pour éviter les variations orthographiques
-                const normalizedCommand = normalizeCommand(command);
-            
-                if (normalizedCommand.includes("retour")) {
-                  focusPreviousInput(); // Déplacement vers le champ précédent
-                  playErrorSound(); // Jouer le bip après le déplacement
-              } else if (normalizedCommand.includes("suivant")) {
-                  moveToNextInput(); // Déplacement vers le champ suivant
-                  playErrorSound(); // Jouer le bip après le déplacement
-                } else if (normalizedCommand.includes("un") || normalizedCommand.includes("une")) {
-                    fillInputFields([1], normalizedCommand); // Remplir avec la valeur 1
-                } else if (normalizedCommand.includes("deux") || normalizedCommand.includes("de")) {
-                    fillInputFields([2], normalizedCommand); // Remplir avec la valeur 2
-                } else if (normalizedCommand.match(/saignement|plaque/)) {
-                    handleCheckboxCommand(normalizedCommand); // Traiter les cases à cocher
-                } else {
-                    const values = normalizedCommand.match(/\d+/g);
-                    if (values) {
-                        fillInputFields(values, normalizedCommand); // Remplir avec les valeurs
-                    }
+
+
+            // Empêcher l'extraction de valeurs lors d'une phrase quelconque 
+              function extractNumericCommand(command) {
+                // Convertir en minuscules et remplacer toute ponctuation (sauf lettres, chiffres, tirets et espaces) par des espaces.
+                let normalized = command.toLowerCase().replace(/[^\w\- ]/g, " ").trim();
+                console.log("Normalized command:", JSON.stringify(normalized));
+              
+                // Si la commande est composée uniquement de chiffres, on découpe en chiffres individuels.
+                if (/^\d+$/.test(normalized)) {
+                  const digits = normalized.split('');
+                  console.log("Commande entièrement numérique sans espace, digits:", digits);
+                  return digits;
                 }
-            
-                // Masquer le cercle après traitement
-                toggleLoadingSpinner(false); // Masquer le cercle
-                isProcessingCommand = false; // Libérer le verrou de commande
-            }
+              
+                // Découper en tokens par espaces
+                let tokens = normalized.split(/\s+/).filter(token => token.length > 0);
+              
+                // Liste autorisée : nombres écrits (zéro à vingt) + "plus" et "moins"
+                const allowedWords = new Set([
+                  "retour", "suivant",
+                  "plus", "moins",
+                  "zéro", "un", "une", "deux", "trois", "quatre", "cinq", "six", "sept", "huit",
+                  "neuf", "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize",
+                  "dix-sept", "dix-huit", "dix-neuf", "vingt"
+                ]);
+              
+                // Vérifier que chaque token est autorisé ou bien est purement numérique.
+                // Sauf si le token contient des tirets et est composé uniquement de chiffres séparés par des tirets.
+                for (let token of tokens) {
+                  if (!allowedWords.has(token) && !/^\d+$/.test(token)) {
+                    if (token.includes('-')) {
+                      // Vérifier que ce token est composé uniquement de chiffres séparés par des tirets.
+                      let parts = token.split('-').filter(p => p.length > 0);
+                      if (!parts.every(part => /^\d+$/.test(part))) {
+                        console.log("Token non autorisé :", token);
+                        return [];
+                      }
+                    } else {
+                      console.log("Token non autorisé :", token);
+                      return [];
+                    }
+                  }
+                }
+              
+                // Mapping des mots numériques en chiffres (sous forme de chaîne)
+                const mapping = {
+                  "zéro": "0",
+                  "un": "1",
+                  "une": "1",
+                  "deux": "2",
+                  "trois": "3",
+                  "quatre": "4",
+                  "cinq": "5",
+                  "six": "6",
+                  "sept": "7",
+                  "huit": "8",
+                  "neuf": "9",
+                  "dix": "10",
+                  "onze": "11",
+                  "douze": "12",
+                  "treize": "13",
+                  "quatorze": "14",
+                  "quinze": "15",
+                  "seize": "16",
+                  "dix-sept": "17",
+                  "dix-huit": "18",
+                  "dix-neuf": "19",
+                  "vingt": "20"
+                };
+              
+                const result = [];
+                let currentSign = ""; // Signe en attente ("" par défaut, "+" ou "-" après détection)
+              
+                // Traiter les tokens dans l'ordre.
+                for (let token of tokens) {
+                  if (token === "plus") {
+                    currentSign = "+"; // On prépare le signe positif
+                  } else if (token === "moins") {
+                    currentSign = "-"; // On prépare le signe négatif
+                  } else if (allowedWords.has(token)) {
+                    // Token autorisé (comme "dix-sept")
+                    let num = mapping[token];
+                    result.push(currentSign + num);
+                    currentSign = ""; // réinitialiser le signe après usage
+                  } else if (/^\d+$/.test(token)) {
+                    // Token purement numérique
+                    result.push(currentSign + token);
+                    currentSign = "";
+                  } else if (token.includes('-')) {
+                    // Token contenant des tirets et composé uniquement de chiffres (exemple "1-2-3")
+                    let parts = token.split('-').filter(p => p.length > 0);
+                    for (let part of parts) {
+                      if (/^\d+$/.test(part)) {
+                        result.push(currentSign + part);
+                      }
+                    }
+                    currentSign = ""; // On réinitialise après avoir traité le token composite
+                  }
+                }
+                console.log("Tokens numériques extraits :", result);
+                return result;
+              }
+              
+              
+                 
+              
+              function fillMultipleInputFields(values, command) {
+                let currentInput = document.activeElement;
+                console.log("Remplissage multiple des champs avec les valeurs :", values, "dans l'élément :", currentInput);
+                if (currentInput && currentInput.tagName === 'INPUT' && currentInput.type === 'text') {
+                  // Désactiver la lecture automatique pour éviter le bip issu de l'événement "input"
+                  isVoiceCommand = true;
+                  
+                  // 1. Remplissage rapide de tous les champs sans déclencher de bip via l'écouteur
+                  values.forEach(rawValue => {
+                    let value = rawValue;
+                    if (command && (command.includes("plus") || command.includes("+"))) {
+                      console.log("Commande 'plus' détectée, valeur positive.");
+                      value = Math.abs(value);
+                    } else if (isNiveauGingivalLine(currentInput)) {
+                      console.log("Valeur négative par défaut pour 'Niveau Gingival'.");
+                      value = -Math.abs(value);
+                    }
+                    currentInput.value = value;
+                    currentInput.dispatchEvent(new Event('input'));
+                    simulateEnterKeyPress(currentInput); // Passage au champ suivant via ta logique existante
+                    const nextInput = findNextVisibleInput(currentInput);
+                    if (nextInput) {
+                      nextInput.focus();
+                      nextInput.select();
+                      currentInput = nextInput;
+                    }
+                  });
+                  
+                  // 2. Lecture des bips en séquence avec un délai très court (1 ms)
+                  (async () => {
+                    for (let i = 0; i < values.length; i++) {
+                      await playBipSoundAsync();
+                      // Délai très court entre chaque bip (ajuste à 1 ms)
+                      await new Promise(resolve => setTimeout(resolve, 1));
+                    }
+                    // Réactiver la lecture automatique une fois la séquence terminée
+                    isVoiceCommand = false;
+                  })();
+                }
+              }
+              
+
+              function playBipSoundAsync() {
+                return new Promise(resolve => {
+                  const audio = new Audio('./bip.mp3');
+                  audio.addEventListener('ended', resolve);
+                  audio.play().catch(err => {
+                    console.error("Erreur lors de la lecture du bip:", err);
+                    resolve();
+                  });
+                });
+              }
+               
+         
+              
+
+              
+                            
+              
+
+
+// Navigation par numéro de dent via assistance vocale
+let lastTableId = "table-container"; // Garde en mémoire le dernier tableau utilisé
+
+// Déterminer la ligne actuelle de l'utilisateur dans le tableau
+function getCurrentRowIndex() {
+  let activeElement = document.activeElement;
+  if (!activeElement) return 1; // Par défaut, ligne 1
+
+  let currentRow = activeElement.closest("tr");
+  if (!currentRow) return 1; // Si aucune ligne détectée, retourner la première ligne
+
+  let tableRows = Array.from(currentRow.parentElement.children);
+  return tableRows.indexOf(currentRow);
+}
+
+function navigateToToothColumn(command, currentTableId) {
+  // Reconnaissance de "dent" suivi d'un numéro (ou variante)
+  const toothRegex = /\b(dent|dents|dans|d'en)\s*(?:num[eé]ro\s*)?(\d{2})\b/i;
+  const match = command.match(toothRegex);
+  if (!match) return;
+
+  const toothNumber = parseInt(match[2], 10);
+  if (toothNumber < 11 || toothNumber > 48) return;
+
+  // Définir les deux groupes de tableaux
+  const vestibulaireGroup = ["table-container", "second-table-container"];
+  const lingualGroup = ["third-table-container", "quatre-table-container"];
+
+  // Détecter les mots-clés dans la commande
+  const isVestibulaire = /\b(vestibulaire|vestibulaires|vestiboulaire|vestiboulaires|vestibul|vestibule|vestibules)\b/i.test(command);
+  const isLingualPalatin = /\b(lingual|linguals|linguale|linguales|palatin|palatins|paladin|paladins|l'ingual|l'angoisse)\b/i.test(command);
+
+  // Si le tableau actif n'appartient pas à un groupe connu, utiliser le dernier mémorisé
+  if (!vestibulaireGroup.includes(currentTableId) && !lingualGroup.includes(currentTableId)) {
+    currentTableId = lastTableId;
+  }
+
+  // Définir allowedTables en fonction des mots-clés ou du groupe du tableau courant
+  let allowedTables;
+  if (isVestibulaire) {
+    allowedTables = vestibulaireGroup;
+  } else if (isLingualPalatin) {
+    allowedTables = lingualGroup;
+  } else {
+    if (vestibulaireGroup.includes(currentTableId)) {
+      allowedTables = vestibulaireGroup;
+    } else if (lingualGroup.includes(currentTableId)) {
+      allowedTables = lingualGroup;
+    } else {
+      allowedTables = vestibulaireGroup; // Par défaut
+    }
+  }
+
+  // Association des numéros de dents aux colonnes pour chaque tableau
+  const toothMapping = {
+    "table-container": [18, 17, 16, 15, 14, 13, 12, 11, 21, 22, 23, 24, 25, 26, 27, 28],
+    "second-table-container": [48, 47, 46, 45, 44, 43, 42, 41, 31, 32, 33, 34, 35, 36, 37, 38],
+    "third-table-container": [28, 27, 26, 25, 24, 23, 22, 21, 11, 12, 13, 14, 15, 16, 17, 18],
+    "quatre-table-container": [38, 37, 36, 35, 34, 33, 32, 31, 41, 42, 43, 44, 45, 46, 47, 48]
+  };
+
+  let targetTableId = null;
+  let toothIndex = null;
+  let foundInCurrentTable = false;
+
+  // Chercher d'abord dans le tableau courant du groupe
+  if (allowedTables.includes(currentTableId)) {
+    const numbers = toothMapping[currentTableId];
+    const index = numbers.indexOf(toothNumber);
+    if (index !== -1) {
+      targetTableId = currentTableId;
+      toothIndex = index;
+      foundInCurrentTable = true;
+    }
+  }
+  // Si non trouvé, chercher dans l'autre tableau du groupe
+  if (!foundInCurrentTable) {
+    for (const tableId of allowedTables) {
+      if (tableId !== currentTableId) {
+        const numbers = toothMapping[tableId];
+        const index = numbers.indexOf(toothNumber);
+        if (index !== -1) {
+          targetTableId = tableId;
+          toothIndex = index;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!targetTableId || toothIndex === null) return;
+  lastTableId = targetTableId; // Met à jour le dernier tableau utilisé
+
+  // Déterminer la ligne actuelle
+  let currentRowIndex = getCurrentRowIndex();
+  if (currentRowIndex < 1) currentRowIndex = 1;
+
+  // Sélectionner la cellule correspondante dans le tableau ciblé et y déplacer le focus
+  const targetTable = document.getElementById(targetTableId);
+  if (targetTable) {
+    const targetRows = targetTable.querySelectorAll("tr");
+    if (targetRows.length > currentRowIndex) {
+      const selector = "td:nth-child(" + (toothIndex + 1) + ") input, td:nth-child(" + (toothIndex + 1) + ") select";
+      const targetCells = targetRows[currentRowIndex].querySelectorAll(selector);
+      if (targetCells.length > 0) {
+        targetCells[0].focus();
+      }
+    }
+  }
+}
+
+// Navigation verticale dans une même colonne
+function navigateVertically(command) {
+  // Pour les commandes de récession/niveau (vers la deuxième ligne) et profondeur (vers la troisième ligne)
+  const recessionRegex = /\b(r[ée]cession|niveau|gencive)\b/i;
+  const profondeurRegex = /\b(profondeur|poche|sondage)\b/i;
+  
+  let targetRowIndex;
+  if (recessionRegex.test(command)) {
+    targetRowIndex = 1; // La deuxième ligne (index 1)
+  } else if (profondeurRegex.test(command)) {
+    targetRowIndex = 2; // La troisième ligne (index 2)
+  } else {
+    return; // Pas de commande verticale détectée
+  }
+  
+  // Obtenir l'élément actuellement actif
+  let activeElement = document.activeElement;
+  if (!activeElement) return;
+  
+  // Récupérer la cellule et la ligne courante
+  let currentCell = activeElement.closest("td");
+  if (!currentCell) return;
+  let currentRow = currentCell.parentElement;
+  let allRows = Array.from(currentRow.parentElement.children);
+  let currentRowIndex = allRows.indexOf(currentRow);
+  
+  // Si on est déjà sur la ligne cible, ne rien faire
+  if (currentRowIndex === targetRowIndex) return;
+  
+  // Déterminer l'indice du champ dans la cellule (si plusieurs champs existent)
+  let fields = Array.from(currentCell.querySelectorAll("input, select"));
+  let fieldIndex = fields.indexOf(activeElement);
+  
+  // Obtenir le tableau courant
+  let table = currentRow.closest("table");
+  if (!table) return;
+  
+  // Obtenir la ligne cible dans le tableau
+  let rows = Array.from(table.querySelectorAll("tr"));
+  if (rows.length <= targetRowIndex) return;
+  let targetRow = rows[targetRowIndex];
+  
+  // Déterminer l'indice de la cellule (colonne) courante
+  let cells = Array.from(currentRow.children);
+  let cellIndex = cells.indexOf(currentCell);
+  
+  // Dans la ligne cible, sélectionner la cellule de la même colonne
+  let targetCells = targetRow.children;
+  if (cellIndex >= targetCells.length) return;
+  let targetCell = targetCells[cellIndex];
+  if (!targetCell) return;
+  
+  // Sélectionner le champ (input/select) dans la cellule cible avec le même indice
+  let targetFields = Array.from(targetCell.querySelectorAll("input, select"));
+  let targetElement = targetFields[fieldIndex] || targetFields[0];
+  if (targetElement) {
+    targetElement.focus();
+  }
+}
+
+// Traiter les commandes vocales
+function processVoiceCommand(command) {
+  console.log("Commande à traiter:", command);
+  isProcessingCommand = true;
+  const normalizedCommand = normalizeCommand(command);
+
+  // Gestion explicite des commandes "retour" et "suivant"
+  if (normalizedCommand.includes("retour")) {
+      focusPreviousInput(); // Déplacement vers le champ précédent
+      playErrorSound();     // Jouer le bip après le déplacement
+      toggleLoadingSpinner(false);
+      isProcessingCommand = false;
+      return;
+  } else if (normalizedCommand.includes("suivant")) {
+      moveToNextInput();    // Déplacement vers le champ suivant
+      playErrorSound();     // Jouer le bip après le déplacement
+      toggleLoadingSpinner(false);
+      isProcessingCommand = false;
+      return;
+  }
+
+  // Navigation verticale (ex : récession, niveau, gencive, profondeur, poche, sondage)
+  const verticalRegex = /\b(r[ée]cession|niveau|gencive|profondeur|poche|sondage)\b/i;
+  if (verticalRegex.test(command)) {
+      navigateVertically(command);
+      toggleLoadingSpinner(false);
+      playErrorSound();
+      isProcessingCommand = false;
+      return;
+  }
+  
+  // Navigation par numéro de dent
+  const navigationRegex = /\b(dent|dents|dans|d'en)\s*(?:num[eé]ro\s*)?(\d{2})\b/i;
+  if (navigationRegex.test(command)) {
+      const activeTable = document.activeElement.closest("table");
+      let currentTableId = activeTable ? activeTable.id : lastTableId;
+      const vestibulaireGroup = ["table-container", "second-table-container"];
+      const lingualGroup = ["third-table-container", "quatre-table-container"];
+      if (!vestibulaireGroup.includes(currentTableId) && !lingualGroup.includes(currentTableId)) {
+          currentTableId = lastTableId;
+      }
+      navigateToToothColumn(command, currentTableId);
+      toggleLoadingSpinner(false);
+      playErrorSound();
+      isProcessingCommand = false;
+      return;
+  }
+  
+  // Gestion des commandes concernant les cases à cocher ("saignement" ou "plaque")
+  if (command.match(/saignement|plaque/i)) {
+      handleCheckboxCommand(command);
+      toggleLoadingSpinner(false);
+      isProcessingCommand = false;
+      return;
+  }
+  
+  // Extraction et traitement des commandes numériques
+  const numericValues = extractNumericCommand(normalizedCommand);
+  if (numericValues.length > 1) {
+      fillMultipleInputFields(numericValues, normalizedCommand);
+  } else if (numericValues.length === 1) {
+      fillInputFields(numericValues, normalizedCommand);
+  } else {
+      console.log("Commande non numérique complète :", normalizedCommand);
+  }
+  
+  toggleLoadingSpinner(false);
+  isProcessingCommand = false;
+}
+
+  
+
+              
+              
 
             //Passer au champ suivant
             function moveToNextInput() {
@@ -1504,32 +1886,29 @@ function hideLoading() {
             function fillInputFields(values, command) {
               const activeElement = document.activeElement;
               console.log("Remplissage du champ avec la valeur:", values[0], "dans l'élément:", activeElement);
-          
+            
               if (activeElement && activeElement.tagName === 'INPUT' && activeElement.type === 'text') {
-                  isVoiceCommand = true; // Indique que la commande vocale est en cours
-          
+                  // Pour une seule valeur, on s'assure que isVoiceCommand est false pour que l'écouteur 'input' déclenche le bip
+                  isVoiceCommand = false;
+            
                   let value = values[0];
-          
-                  // Si l'utilisateur spécifie "plus" ou "moins", ajuster le signe
+            
                   if (command && (command.includes("plus") || command.includes("+"))) {
                       console.log("Commande 'plus' détectée, valeur positive.");
-                      value = Math.abs(value); // S'assurer que la valeur est positive
+                      value = Math.abs(value);
                   } else if (isNiveauGingivalLine(activeElement)) {
                       console.log("Valeur négative par défaut pour 'Niveau Gingival'.");
-                      value = -Math.abs(value); // Valeur négative par défaut
+                      value = -Math.abs(value);
                   }
-          
-                  activeElement.value = value; // Remplir le champ avec la valeur
+            
+                  activeElement.value = value;
                   activeElement.dispatchEvent(new Event('input'));
-          
-                  // Assurez-vous que la synthèse vocale n'est appelée qu'une seule fois par commande
-                  if (!isProcessingCommand) {
-                      speakValue(value);
-                  }
-          
-                  simulateEnterKeyPress(activeElement); // Simuler "Enter" pour passer au champ suivant
+                  
+                  // On simule l'appui sur "Enter" pour passer au champ suivant
+                  simulateEnterKeyPress(activeElement);
               }
-          }
+            }
+            
           
 
 
@@ -1763,7 +2142,11 @@ function hideLoading() {
                             console.log("Focus sur l'élément d'index:", index);
                             currentInputIndex = index;
                         });
-                        input.addEventListener('input', () => speakValue(input.value));
+                        input.addEventListener('input', function() {
+                          if (!isVoiceCommand) {
+                            speakValue(this.value);
+                          }
+                        });                        
                         input.addEventListener('keydown', (event) => {
                             if (event.key === 'Enter') {
                                 let nextInput = findNextVisibleInput2(input);
