@@ -2004,55 +2004,93 @@ function processVoiceCommand(command) {
 
             // Gérer les cases à cocher via commandes vocales
             function handleCheckboxCommand(command) {
-                console.log("Commande détectée pour case à cocher:", command);
-
-                const defaultPositionMap = {
-                    'mésio': 2, 'vestibulaire': 1, 'palatin': 1, 'lingual': 1, 'disto': 0, 'distal': 0,
-                    'mésial': 2, 'méziale': 2, 'métiale': 2, 'méssiale': 2, 'mézial': 2,
-                    'métial': 2, 'méssial': 2
-                };
-
-                const modifiedPositionMap = {
-                    'mésio': 0, 'vestibulaire': 1, 'palatin': 1, 'lingual': 1, 'disto': 2, 'distal': 2,
-                    'mésial': 0, 'méziale': 0, 'métiale': 0, 'méssiale': 0, 'mézial': 0,
-                    'métial': 0, 'méssial': 0
-                };
-
-                const positionIdentifiers = command.match(/mésio|vestibulaire|palatin|lingual|disto|distal|mésial|méziale|métiale|méssiale|mézial|métial|méssial/g);
-                const rowIdentifier = command.match(/saignement|plaque/i);
-
-                if (positionIdentifiers && rowIdentifier) {
-                    console.log("Commande case détectée:", rowIdentifier[0], positionIdentifiers);
-                    const table = document.activeElement.closest('table');
-                    const columnIdx = document.activeElement.closest('td').cellIndex;
-                    const rowIdx = rowIdentifier[0].toLowerCase() === "saignement" ? 4 : 5;
-                    const targetRow = table.querySelector(`tr:nth-child(${rowIdx})`);
-                    const targetCell = targetRow.querySelector(`td:nth-child(${columnIdx + 1})`);
-                    const checkboxes = targetCell.querySelectorAll('input[type="checkbox"]');
-
-                    positionIdentifiers.forEach((identifier) => {
-                        const positionIdx = columnIdx >= 8 ? modifiedPositionMap[identifier] : defaultPositionMap[identifier];
-                        if (checkboxes && checkboxes[positionIdx]) {
-                            // Cocher ou décocher la case et déclencher l'événement change
-                            checkboxes[positionIdx].checked = !checkboxes[positionIdx].checked;
-                            checkboxes[positionIdx].dispatchEvent(new Event('change')); // Déclencher l'événement 'change'
-                            console.log("Case", identifier, "cochée/décochée.");
-                        }
-                    });
-
-                    // Utilisation d'un délai pour laisser le temps à l'assistant de continuer après la mise à jour
-                    setTimeout(() => {
-                      if (rowIdentifier[0].toLowerCase() === "saignement") {
-                        updateSaignementPercentage2();
-                    } else if (rowIdentifier[0].toLowerCase() === "plaque") {
-                        updatePlaquePercentage2();
-                    }
+              console.log("Commande détectée pour case à cocher:", command);
+          
+              // Cartographie par défaut avec un ensemble étendu de synonymes pour chaque terme
+              const defaultPositionMap = {
+                  // Pour "mésial"
+                  'mésio': 2, 'mésial': 2, 'méial': 2, 'méiale': 2, 'média': 2,'megal': 2,'megale': 2,'mégal': 2,'mégale': 2,'media': 2, 'méziale': 2, 'métiale': 2, 'méssiale': 2, 'mézial': 2,
+                  'médiale': 2, 'médiatl': 2, 'mondial': 2, 'mondiale': 2, 'média': 2, 'm dia': 2,
+                  // Pour "vestibulaire"
+                  'vestibulaire': 1, 'vestibulaires': 1, 'vestiboulaire': 1, 'vestiboulaires': 1, 'vestibul': 1, 'vestibule': 1, 'vestibules': 1,
+                  // Pour "palatin"
+                  'palatin': 1, 'palatine': 1, 'palatins': 1, 'palatines': 1,
+                  // Pour "lingual"
+                  'lingual': 1, 'linguale': 1, 'linguales': 1,
+                  // Pour "distal"
+                  'disto': 0, 'distal': 0, 'distale': 0, 'distales': 0,
+                  'dissale': 0, 'dissal': 0, 'disal': 0, 'disale': 0
+              };
+          
+              // Cartographie modifiée (selon le contexte de la colonne)
+              const modifiedPositionMap = {
+                  // Pour "mésial"
+                  'mésio': 0, 'mésial': 0, 'méial': 0, 'média': 0, 'media': 0, 'méiale': 0,'megal': 0,'megale': 0,'mégal': 0,'mégale': 0, 'méziale': 0, 'métiale': 0, 'méssiale': 0, 'mézial': 0,
+                  'médiale': 0, 'médiatl': 0, 'mondial': 0, 'mondiale': 0, 'média': 0, 'm dia': 0,
+                  // Pour "vestibulaire"
+                  'vestibulaire': 1, 'vestibulaires': 1, 'vestiboulaire': 1, 'vestiboulaires': 1, 'vestibul': 1, 'vestibule': 1, 'vestibules': 1,
+                  // Pour "palatin"
+                  'palatin': 1, 'palatine': 1, 'palatins': 1, 'palatines': 1,
+                  // Pour "lingual"
+                  'lingual': 1, 'linguale': 1, 'linguales': 1,
+                  // Pour "distal"
+                  'disto': 2, 'distal': 2, 'distale': 2, 'distales': 2,
+                  'dissale': 2, 'dissal': 2, 'disal': 2, 'disale': 2
+              };
+          
+              // Extraction des identifiants de position avec l'ensemble des variantes (en insensible à la casse)
+              const positionIdentifiers = command.match(/(mésio|mésial|méial|média|mégale|mégal|mégale|megal|megale|méziale|métiale|méssiale|mézial|médiale|médiatl|mondial|mondiale|media|m dia|vestibulaire|vestibulaires|vestiboulaire|vestiboulaires|vestibul|vestibule|vestibules|palatin|palatine|palatins|palatines|lingual|linguale|linguales|disto|distal|distale|distales|dissale|dissal|disal|disale)/gi);
+              
+              // Extraction du type de ligne pour la commande (pour "saignement" et ses variantes, et "plaque" et ses variantes)
+              const rowIdentifier = command.match(/(saignement|saignements|seignement|ça me manque|ça me ment|sa me manque|sa me ment|plaque|plaques|blague|plat)/i);
+          
+              if (positionIdentifiers && rowIdentifier) {
+                  console.log("Commande case détectée:", rowIdentifier[0], positionIdentifiers);
+                  const table = document.activeElement.closest('table');
+                  const columnIdx = document.activeElement.closest('td').cellIndex;
+                  // Pour "plaque" on cible la ligne 5, sinon pour "saignement" la ligne 4
+                  const rowIdx = rowIdentifier[0].toLowerCase().includes("plaque") ||
+                                 rowIdentifier[0].toLowerCase().includes("blague") ||
+                                 rowIdentifier[0].toLowerCase().includes("plat")
+                                 ? 5 : 4;
+                  const targetRow = table.querySelector(`tr:nth-child(${rowIdx})`);
+                  const targetCell = targetRow.querySelector(`td:nth-child(${columnIdx + 1})`);
+                  const checkboxes = targetCell.querySelectorAll('input[type="checkbox"]');
+          
+                  positionIdentifiers.forEach((identifier) => {
+                      const posId = identifier.toLowerCase();
+                      const positionIdx = columnIdx >= 8 ? modifiedPositionMap[posId] : defaultPositionMap[posId];
+                      if (checkboxes && checkboxes[positionIdx]) {
+                          checkboxes[positionIdx].checked = !checkboxes[positionIdx].checked;
+                          checkboxes[positionIdx].dispatchEvent(new Event('change'));
+                          console.log("Case", identifier, "cochée/décochée.");
+                      }
                   });
-                    
-                    // Faire parler la commande après traitement
-                    speakCommand(`${rowIdentifier} ${positionIdentifiers.join(' ')}`);
-                }
-            }
+          
+                  setTimeout(() => {
+                      if (rowIdentifier[0].toLowerCase().includes("saignement") ||
+                          rowIdentifier[0].toLowerCase().includes("seignement") ||
+                          rowIdentifier[0].toLowerCase().includes("ça me manque") ||
+                          rowIdentifier[0].toLowerCase().includes("Ca me manque") ||
+                          rowIdentifier[0].toLowerCase().includes("ca me ment") ||
+                          rowIdentifier[0].toLowerCase().includes("ça me ment") ||
+                          rowIdentifier[0].toLowerCase().includes("sa me manque") ||
+                          rowIdentifier[0].toLowerCase().includes("sa me ment")) {
+                          updateSaignementPercentage2();
+                      } else if (rowIdentifier[0].toLowerCase().includes("plaque") ||
+                                 rowIdentifier[0].toLowerCase().includes("blague") ||
+                                 rowIdentifier[0].toLowerCase().includes("plat")) {
+                          updatePlaquePercentage2();
+                      }
+                  }, 0);
+          
+                  (async () => {
+                    for (let i = 0; i < positionIdentifiers.length; i++) {
+                      await playBipSoundAsync();
+                    }
+                  })();              }
+          }
+          
 
 
 
