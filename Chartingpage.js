@@ -1430,7 +1430,8 @@ function hideLoading() {
 
                 // Traiter les résultats de la reconnaissance
                 recognizer.recognized = (s, event) => {
-                    console.log('Texte reconnu:', event.result.text);
+                        console.log('Transcription brute de l\'API:', event.result.text); // ✅ Transcription brute sans traitement
+                        console.log('Texte reconnu (traité):', event.result.text);
                     if (isProcessingCommand) return; // Empêcher le traitement multiple
                     const command = event.result.text.trim().toLowerCase();
                     processVoiceCommand(command); // Traiter la commande
@@ -1634,7 +1635,7 @@ function getCurrentRowIndex() {
 
 function navigateToToothColumn(command, currentTableId) {
   // Reconnaissance de "dent" suivi d'un numéro (ou variante)
-  const toothRegex = /\b(dent|dents|dans|d'en)\s*(?:num[eé]ro\s*)?(\d{2})\b/i;
+  const toothRegex = /\b(dent|dents|dans|dont|donc|ton|don,|thon|d'en)\s*(?:num[eé]ro\s*)?(\d{2})\b/i;
   const match = command.match(toothRegex);
   if (!match) return;
 
@@ -1647,7 +1648,7 @@ function navigateToToothColumn(command, currentTableId) {
 
   // Détecter les mots-clés dans la commande
   const isVestibulaire = /\b(vestibulaire|vestibulaires|vestiboulaire|vestiboulaires|vestibul|vestibule|vestibules)\b/i.test(command);
-  const isLingualPalatin = /\b(lingual|linguals|linguale|linguales|palatin|palatins|paladin|paladins|l'ingual|l'angoisse)\b/i.test(command);
+  const isLingualPalatin = /\b(lingual|linguals|linguale|linguales|langwal|langual|longwal|longwale|longwales|longwals|languale|languales|langwale|langwales|lingois|palatin|palatins|paladin|paladins|l'ingual|l'angoisse)\b/i.test(command);
 
   // Si le tableau actif n'appartient pas à un groupe connu, utiliser le dernier mémorisé
   if (!vestibulaireGroup.includes(currentTableId) && !lingualGroup.includes(currentTableId)) {
@@ -1820,7 +1821,7 @@ function processVoiceCommand(command) {
   }
   
   // Navigation par numéro de dent
-  const navigationRegex = /\b(dent|dents|dans|d'en)\s*(?:num[eé]ro\s*)?(\d{2})\b/i;
+  const navigationRegex = /\b(dent|dents|dans|dont|donc|ton|don,|thon|d'en)\s*(?:num[eé]ro\s*)?(\d{2})\b/i;
   if (navigationRegex.test(command)) {
       const activeTable = document.activeElement.closest("table");
       let currentTableId = activeTable ? activeTable.id : lastTableId;
@@ -2009,14 +2010,14 @@ function processVoiceCommand(command) {
               // Cartographie par défaut avec un ensemble étendu de synonymes pour chaque terme
               const defaultPositionMap = {
                   // Pour "mésial"
-                  'mésio': 2, 'mésial': 2, 'méial': 2, 'méiale': 2, 'média': 2,'megal': 2,'megale': 2,'mégal': 2,'mégale': 2,'media': 2, 'méziale': 2, 'métiale': 2, 'méssiale': 2, 'mézial': 2,
+                  'mésio': 2, 'mésial': 2, 'méial': 2, 'méiale': 2,'monsieur': 2,'messieur': 2,'messieurs': 2, 'média': 2,'megal': 2,'megale': 2,'mégal': 2,'mégale': 2,'media': 2, 'méziale': 2, 'métiale': 2, 'méssiale': 2, 'mézial': 2,
                   'médiale': 2, 'médiatl': 2, 'mondial': 2, 'mondiale': 2, 'média': 2, 'm dia': 2,
                   // Pour "vestibulaire"
                   'vestibulaire': 1, 'vestibulaires': 1, 'vestiboulaire': 1, 'vestiboulaires': 1, 'vestibul': 1, 'vestibule': 1, 'vestibules': 1,
                   // Pour "palatin"
                   'palatin': 1, 'palatine': 1, 'palatins': 1, 'palatines': 1,
                   // Pour "lingual"
-                  'lingual': 1, 'linguale': 1, 'linguales': 1,
+                  'lingual': 1, 'linguale': 1, 'linguales': 1, 'langwal': 1, 'langual': 1, 'languale': 1, 'languales': 1, 'langwale': 1, 'langwales': 1, 'longwal': 1, 'longwale': 1, 'longwales': 1,'longwals': 1,'l angoisse': 1,'lingois': 1,"l'angoisse": 1,
                   // Pour "distal"
                   'disto': 0, 'distal': 0, 'distale': 0, 'distales': 0,
                   'dissale': 0, 'dissal': 0, 'disal': 0, 'disale': 0
@@ -2025,21 +2026,21 @@ function processVoiceCommand(command) {
               // Cartographie modifiée (selon le contexte de la colonne)
               const modifiedPositionMap = {
                   // Pour "mésial"
-                  'mésio': 0, 'mésial': 0, 'méial': 0, 'média': 0, 'media': 0, 'méiale': 0,'megal': 0,'megale': 0,'mégal': 0,'mégale': 0, 'méziale': 0, 'métiale': 0, 'méssiale': 0, 'mézial': 0,
+                  'mésio': 0, 'mésial': 0, 'méial': 0, 'messieur': 0,'messieurs': 0,'monsieur': 0, 'média': 0, 'media': 0, 'méiale': 0,'megal': 0,'megale': 0,'mégal': 0,'mégale': 0, 'méziale': 0, 'métiale': 0, 'méssiale': 0, 'mézial': 0,
                   'médiale': 0, 'médiatl': 0, 'mondial': 0, 'mondiale': 0, 'média': 0, 'm dia': 0,
                   // Pour "vestibulaire"
                   'vestibulaire': 1, 'vestibulaires': 1, 'vestiboulaire': 1, 'vestiboulaires': 1, 'vestibul': 1, 'vestibule': 1, 'vestibules': 1,
                   // Pour "palatin"
                   'palatin': 1, 'palatine': 1, 'palatins': 1, 'palatines': 1,
                   // Pour "lingual"
-                  'lingual': 1, 'linguale': 1, 'linguales': 1,
+                  'lingual': 1, 'linguale': 1, 'linguales': 1, 'langwal': 1, 'langual': 1, 'languale': 1, 'languales': 1, 'langwale': 1, 'langwales': 1,'longwal': 1, 'longwale': 1, 'longwales': 1,'longwals': 1, 'l angoisse': 1,'lingois': 1,"l'angoisse": 1,
                   // Pour "distal"
                   'disto': 2, 'distal': 2, 'distale': 2, 'distales': 2,
                   'dissale': 2, 'dissal': 2, 'disal': 2, 'disale': 2
               };
           
               // Extraction des identifiants de position avec l'ensemble des variantes (en insensible à la casse)
-              const positionIdentifiers = command.match(/(mésio|mésial|méial|média|mégale|mégal|mégale|megal|megale|méziale|métiale|méssiale|mézial|médiale|médiatl|mondial|mondiale|media|m dia|vestibulaire|vestibulaires|vestiboulaire|vestiboulaires|vestibul|vestibule|vestibules|palatin|palatine|palatins|palatines|lingual|linguale|linguales|disto|distal|distale|distales|dissale|dissal|disal|disale)/gi);
+              const positionIdentifiers = command.match(/(mésio|mésial|méial|média|monsieur|messieur|messieurs|mégale|mégal|mégale|megal|megale|méziale|métiale|méssiale|mézial|médiale|médiatl|mondial|mondiale|media|m dia|vestibulaire|vestibulaires|vestiboulaire|vestiboulaires|vestibul|vestibule|vestibules|palatin|palatine|palatins|palatines|lingual|linguale|linguales|langwal|langual|longwal|longwale|longwales|longwals|languale|languales|langwale|langwales|l'angoisse|lingois|disto|distal|distale|distales|dissale|dissal|disal|disale)/gi);
               
               // Extraction du type de ligne pour la commande (pour "saignement" et ses variantes, et "plaque" et ses variantes)
               const rowIdentifier = command.match(/(saignement|saignements|seignement|ça me manque|ça me ment|sa me manque|sa me ment|plaque|plaques|blague|plat)/i);
